@@ -1,0 +1,5 @@
+Original prompt: what i wanted to do was now make this square interactable, for example, i was imagining having a button to the right side which shows a image of a black circle for example, and when you press it it spawns a black circle, and it sort of looks like its in space based on the movement, and so that black circle that you spawn is floating or has that physics, and you can grab that circle and throw it at the raimbow square, and that rainbow square will move in a way as if it was jello
+
+- 2026-03-25: Starting interactive pass. Plan is to keep the existing rainbow grid art, add a scene wrapper with a spawn button, and implement draggable floating circles with a springy jelly response on collision.
+- 2026-03-25: Added scene UI, spawn button, floating orb physics, drag-and-throw controls, and springy jelly transforms on the rainbow square.
+- 2026-03-25: Found an interaction issue during testing. The orb was spawning under the toolbox, so it could be created but not grabbed reliably. Moved spawn placement to the left of the toolbox.
