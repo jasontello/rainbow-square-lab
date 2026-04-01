@@ -179,8 +179,8 @@ function handlePointerMove(event) {
 
     ball.x = clamp(pointer.x, ball.radius, rect.width - ball.radius);
     ball.y = clamp(pointer.y, ball.radius, rect.height - ball.radius);
-    ball.vx = clamp((pointer.x - state.drag.lastX) / dt, -900, 900);
-    ball.vy = clamp((pointer.y - state.drag.lastY) / dt, -900, 900);
+    ball.vx = clamp((pointer.x - state.drag.lastX) / dt, -900, 2900);
+    ball.vy = clamp((pointer.y - state.drag.lastY) / dt, -900, 2900);
 
     state.drag.lastX = pointer.x;
     state.drag.lastY = pointer.y;

@@ -43,37 +43,105 @@ body {
     position: absolute;
     top: 50%;
     right: 1.25rem;
+    transform: translateY(-50%);
+    width: 88px;
+
+    height: 350px;
     z-index: 5;
     display: grid;
+    place-items: center;
+    background: black;
+    border-radius: 999px;
     gap: 0.75rem;
-    width: min(180px, 24vw);
-    transform: translateY(-50%);
 }
 
-.spawn-button {
+.tool-button {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.9rem;
-    padding: 0.95rem 1rem;
-    border: 1px solid rgba(17, 24, 39, 0.14);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.9);
+    padding: 1rem 1rem;
+    border: 1px solid white;
+    background: white;
     color: inherit;
     font: inherit;
     cursor: pointer;
     box-shadow: 0 16px 35px rgba(15, 23, 42, 0.12);
+    border-radius: 999px;
+    color: white;
+    transition:
+        transform 180ms ease,
+        box-shadow 180ms ease,
+        border-color 180ms ease;
 }
 
-.spawn-button:hover {
-    transform: translateY(-1px);
+.tool-button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0;
+    background: linear-gradient(
+        90deg,
+        #36ABE1 0%,
+        #931C80 6.25%,
+        #E5127F 12.5%,
+        #e51819 18.75%,
+        #F9B236 25%,
+        #fbdd00 31.25%,
+        #95C029 37.5%,
+        #36ABE1 43.75%,
+        #36ABE1 50%,
+        #931C80 56.25%,
+        #E5127F 62.5%,
+        #e51819 68.75%,
+        #F9B236 75%,
+        #fbdd00 81.25%,
+        #95C029 87.5%,
+        #36ABE1 93.75%,
+        #931C80 100%
+    );
+    transition: opacity 180ms ease;
 }
 
-.spawn-preview {
-    width: 1.4rem;
-    height: 1.4rem;
+.tool-button:hover {
+    transform: translateY(-4px) scale(1.06);
+    box-shadow: 0 22px 38px rgba(15, 23, 42, 0.22);
+    border-color: transparent;
+}
+
+.tool-button:hover::before {
+    opacity: 1;
+    animation: rainbow-shift 1s linear infinite;
+}
+
+.tool-button:focus-visible {
+    outline: 2px solid #111827;
+    outline-offset: 4px;
+}
+
+@keyframes rainbow-shift {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.tool-icon-circle-icon {
+    width: 1.8rem;
+    height: 1.8rem;
     border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, #515151, #0b0b0b 62%, #000 100%);
-    box-shadow: inset -4px -4px 10px rgba(255, 255, 255, 0.08);
+    background: radial-gradient(circle at 30% 30%, #4b4b4b, #0b0b0b 62%, #000000 100%);
+    box-shadow: inset -2px -2px 4px rgba(255, 255, 255, 0.08), 0 2px 6px rgba(0, 0, 0, 0.28);
 }
 
 .tool-hint {
