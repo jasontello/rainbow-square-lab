@@ -6,3 +6,5 @@ Original prompt: what i wanted to do was now make this square interactable, for 
 - 2026-04-02: Reworked the toolbar into a vertical icon tool palette with active-state styling for toggle tools.
 - 2026-04-02: Added Theme, Gravity, Jelly, and Reset tool behaviors. Verified in a headless browser that Spawn creates a ball, Dark Mode toggles on, Gravity toggles on, Jelly toggles off, and Reset clears spawned balls while leaving toggle states intact.
 - 2026-04-02: Upgraded Reset so balls jitter briefly, pop away, and play a synthesized pop sound. Verified in a headless browser that balls exist before reset and are cleared after the animation delay.
+- 2026-04-02: Added a first-load intro overlay using the book cover image. The cover holds briefly, then crossfades into the live page underneath so the cover art transitions into the interactive square.
+- 2026-04-02: Refined the intro so the live rainbow grid starts at the approximate printed-cover size, then eases up to its normal on-page size while the book cover fades away.

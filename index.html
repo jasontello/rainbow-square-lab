@@ -9,14 +9,19 @@
     <link rel="stylesheet" href="style.css">
 
   </head>
-  <body>
+  <body class="is-intro-playing">
+    <div class="book-intro" id="book-intro" aria-hidden="true">
+        <img class="book-intro-image" id="book-intro-image" src="assets/book-cover.webp" alt="">
+    </div>
+
     <main class="page">
         <div class="credits">
-            <p><b>Rainbow Square Designed by Sean Adams.</b></p>
+            <p><b>The Designer's Dictionary of Color <br> <span class="credits-author">By Sean Adams</span></b></p>
         </div>
 
         <div class="scene" id="scene">
             <div class="rainbow-grid-wrap">
+                <div class="rainbow-grid-stage" id="rainbow-grid-stage">
                 <div class="rainbow-grid" id="rainbow-grid">
                 <div class="rainbow-square"></div>
                 <div class="rainbow-square"></div>
@@ -198,6 +203,7 @@
                 <div class="rainbow-square"></div>
                 <div class="rainbow-square"></div>
 
+                </div>
                 </div>
             </div>
 

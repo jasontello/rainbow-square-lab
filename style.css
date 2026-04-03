@@ -6,12 +6,52 @@ body {
     transition: background-color 0.25s ease, color 0.25s ease;
 }
 
+.book-intro {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: grid;
+    place-items: center;
+    background: #000000;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 1.4s ease, visibility 0s linear 1.4s;
+}
+
+.book-intro-image {
+    width: clamp(320px, 42vw, 520px);
+    max-width: calc(100vw - 3rem);
+    display: block;
+    box-shadow: 0 28px 60px rgba(0, 0, 0, 0.35);
+    opacity: 1;
+    transition: opacity 0.85s ease;
+}
+
+body.is-intro-image-fading .book-intro-image {
+    opacity: 0;
+}
+
+body.is-intro-complete .book-intro {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
 .page {
     min-height: 100vh;
     padding: 1rem;
     display: grid;
     grid-template-rows: auto 1fr;
     gap: 1rem;
+    opacity: 1;
+    filter: blur(0);
+    transition: opacity 1s ease 0.1s, filter 1s ease 0.1s;
+}
+
+body.is-intro-playing .page {
+    opacity: 0;
+    filter: blur(10px);
+    pointer-events: none;
 }
 
 .scene {
@@ -33,6 +73,12 @@ body {
     pointer-events: none;
 }
 
+.rainbow-grid-stage {
+    position: relative;
+    z-index: 2;
+    transform-origin: center;
+}
+
 .credits {
     font-family: Helvetica, sans-serif;
 }
@@ -40,6 +86,10 @@ body {
 .credits p {
     margin: 0;
     transition: color 0.25s ease;
+}
+
+.credits-author {
+    color: #d7421f;
 }
 
 .toolbox {
@@ -128,6 +178,10 @@ body.is-dark-mode .scene {
     background: #171717;
 }
 
+body.is-dark-mode .book-intro {
+    background: #000000;
+}
+
 body.is-dark-mode .credits p {
     color: #f5f5f5;
 }
@@ -164,7 +218,6 @@ body.is-dark-mode .tool-icon-sun {
 
 .rainbow-grid {
     position: relative;
-    z-index: 2;
     display: grid;
     grid-template-columns: repeat(14, 1fr);
     grid-template-rows: repeat(12, 1fr);

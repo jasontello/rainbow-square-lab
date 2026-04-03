@@ -1,12 +1,17 @@
 const scene = document.getElementById("scene");
 const grid = document.getElementById("rainbow-grid");
+const gridStage = document.getElementById("rainbow-grid-stage");
 const spawnButton = document.getElementById("spawn-circle-btn");
 const darkModeButton = document.getElementById("dark-mode-btn");
 const gravityButton = document.getElementById("gravity-btn");
 const jellyButton = document.getElementById("jelly-btn");
 const resetButton = document.getElementById("reset-btn");
+const introOverlay = document.getElementById("book-intro");
+const introImage = document.getElementById("book-intro-image");
 const toolbox = document.querySelector(".toolbox");
 let audioContext = null;
+
+const BOOK_COVER_GRID_WIDTH_RATIO = 0.625;
 
 const DEFAULT_JELLY = {
     x: 0,
@@ -30,6 +35,13 @@ const state = {
     heavyGravity: false,
     jellyEnabled: true,
     resetInProgress: false,
+    intro: {
+        startScale: 1,
+        startY: 89,
+        progress: 0,
+        durationMs: 1600,
+        revealing: false
+    },
     jelly: { ...DEFAULT_JELLY }
 };
 
@@ -41,10 +53,97 @@ function round(value) {
     return Math.round(value * 100) / 100;
 }
 
+function easeInOutCubic(value) {
+    if (value < 0.5) {
+        return 4 * value * value * value;
+    }
+
+    return 1 - Math.pow(-2 * value + 2, 3) / 2;
+}
+
 function wait(ms) {
     return new Promise((resolve) => {
         window.setTimeout(resolve, ms);
     });
+}
+
+function completeIntro() {
+    document.body.classList.add("is-intro-complete");
+    document.body.classList.remove("is-intro-playing");
+    document.body.classList.remove("is-intro-image-fading");
+}
+
+function getIntroScale() {
+    const intro = state.intro;
+    const easedProgress = easeInOutCubic(intro.progress);
+
+    return intro.startScale + (1 - intro.startScale) * easedProgress;
+}
+
+function getIntroOffsetY() {
+    const easedProgress = easeInOutCubic(state.intro.progress);
+
+    return state.intro.startY * (1 - easedProgress);
+}
+
+function measureIntroScale() {
+    if (!introImage || !gridStage) {
+        return 1;
+    }
+
+    const imageRect = introImage.getBoundingClientRect();
+    const stageRect = gridStage.getBoundingClientRect();
+
+    if (!imageRect.width || !stageRect.width) {
+        return 1;
+    }
+
+    const coverGridWidth = imageRect.width * BOOK_COVER_GRID_WIDTH_RATIO;
+
+    return clamp(coverGridWidth / stageRect.width, 0.55, 1);
+}
+
+function syncIntroScale() {
+    state.intro.startScale = measureIntroScale();
+}
+
+function startIntroReveal(durationMs) {
+    state.intro.durationMs = durationMs;
+    state.intro.progress = 0;
+    state.intro.revealing = true;
+    completeIntro();
+}
+
+function runIntroTransition() {
+    if (!introOverlay || !introImage) {
+        state.intro.progress = 1;
+        completeIntro();
+        return;
+    }
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const revealDelay = prefersReducedMotion ? 120 : 1100;
+    const imageFadeDuration = prefersReducedMotion ? 120 : 850;
+    const revealDuration = prefersReducedMotion ? 180 : 1800;
+
+    const startRevealTimer = () => {
+        syncIntroScale();
+        render();
+        window.setTimeout(() => {
+            document.body.classList.add("is-intro-image-fading");
+            window.setTimeout(() => {
+                startIntroReveal(revealDuration);
+            }, imageFadeDuration);
+        }, revealDelay);
+    };
+
+    if (introImage.complete) {
+        startRevealTimer();
+        return;
+    }
+
+    introImage.addEventListener("load", startRevealTimer, { once: true });
+    introImage.addEventListener("error", startRevealTimer, { once: true });
 }
 
 function getAudioContext() {
@@ -424,8 +523,23 @@ function updateJelly(dt) {
     jelly.vScaleY = clamp(jelly.vScaleY, -2.5, 2.5);
 }
 
+function updateIntro(dt) {
+    const intro = state.intro;
+
+    if (!intro.revealing) {
+        return;
+    }
+
+    intro.progress = clamp(intro.progress + (dt * 1000) / intro.durationMs, 0, 1);
+
+    if (intro.progress >= 1) {
+        intro.revealing = false;
+    }
+}
+
 function update(dt) {
     state.time += dt;
+    updateIntro(dt);
 
     const rect = getSceneRect();
     const bounds = getGridBounds();
@@ -459,6 +573,12 @@ function update(dt) {
 
 function render() {
     const jelly = state.jelly;
+    const introScale = getIntroScale();
+    const introOffsetY = getIntroOffsetY();
+
+    if (gridStage) {
+        gridStage.style.transform = `translateY(${introOffsetY.toFixed(2)}px) scale(${introScale.toFixed(3)})`;
+    }
 
     grid.style.transform = [
         `translate(${jelly.x.toFixed(2)}px, ${jelly.y.toFixed(2)}px)`,
@@ -611,7 +731,10 @@ window.advanceTime = (ms) => {
 window.addEventListener("pointermove", handlePointerMove);
 window.addEventListener("pointerup", (event) => stopDrag(event.pointerId));
 window.addEventListener("pointercancel", (event) => stopDrag(event.pointerId));
-window.addEventListener("resize", render);
+window.addEventListener("resize", () => {
+    syncIntroScale();
+    render();
+});
 spawnButton.addEventListener("click", spawnBall);
 if (darkModeButton) {
     darkModeButton.addEventListener("click", toggleDarkMode);
@@ -629,5 +752,7 @@ if (resetButton) {
 syncDarkModeButton();
 syncGravityButton();
 syncJellyButton();
+syncIntroScale();
+runIntroTransition();
 render();
 window.requestAnimationFrame(animate);
