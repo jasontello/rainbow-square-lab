@@ -203,25 +203,47 @@
 
             <aside class="toolbox">
                 <button class="tool-button" id="spawn-circle-btn" type="button" aria-label="Spawn circle" title="Spawn circle">
-                  <img class="tool-icon-circle-icon" src="assets/ball_trail_transparent_simple.svg">
+                    <svg class="tool-icon tool-icon-spawn" viewBox="0 0 64 64" aria-hidden="true">
+                        <g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M8 24H22"></path>
+                            <path d="M4 32H20"></path>
+                            <path d="M10 40H22"></path>
+                            <circle cx="42" cy="32" r="14"></circle>
+                        </g>
+                    </svg>
                 </button>
 
-                <button class="tool-button" id="dark-mode-btn" type="button" aria-label="Dark mode" title="Dark mode">
+                <button class="tool-button" id="dark-mode-btn" type="button" aria-label="Enable dark mode" title="Enable dark mode">
+                    <svg class="tool-icon tool-icon-toggle tool-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M14.6 3.2C12.05 3.48 9.81 4.85 8.5 6.92C7.19 8.99 6.93 11.53 7.8 13.82C8.67 16.11 10.58 17.93 12.95 18.69C15.32 19.45 17.89 19.07 19.95 17.66C17.79 17.42 15.82 16.43 14.45 14.9C13.08 13.37 12.41 11.32 12.6 9.27C12.78 7.22 13.81 5.31 15.48 4C15.18 3.79 14.89 3.53 14.6 3.2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+                    </svg>
+                    <svg class="tool-icon tool-icon-toggle tool-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
+                        <path d="M12 2.75V5.1M12 18.9V21.25M21.25 12H18.9M5.1 12H2.75M18.54 5.46L16.88 7.12M7.12 16.88L5.46 18.54M18.54 18.54L16.88 16.88M7.12 7.12L5.46 5.46" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                    </svg>
                 </button>
 
-                <button class="tool-button" id="chimp-game-btn" type="button" aria-label="chimp game mode" title="chimp game mode">
+                <button class="tool-button" id="gravity-btn" type="button" aria-label="Enable heavy gravity" title="Enable heavy gravity">
+                    <svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 4.5V16.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path>
+                        <path d="M8.5 13L12 16.5L15.5 13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <path d="M7 19.5H17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+                    </svg>
                 </button>
 
-                <button class="tool-button" id="falling-text-btn" type="button" aria-label="falling text mode" title="falling text mode">
+                <button class="tool-button is-active" id="jelly-btn" type="button" aria-label="Disable jelly motion" title="Disable jelly motion">
+                    <svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M7.5 8.5C7.5 7.4 8.4 6.5 9.5 6.5H14.5C15.6 6.5 16.5 7.4 16.5 8.5V13.7C16.5 16.4 14.3 18.5 11.7 18.5C9.6 18.5 7.5 17.1 7.5 14.3V8.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+                        <path d="M8.8 11.1C9.8 11.9 10.8 11.9 11.8 11.1C12.8 10.3 13.8 10.3 14.8 11.1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+                    </svg>
                 </button>
 
-                <button class="tool-button" id="eyes-mode-btn" type="button" aria-label="Eyes mode" title="Eyes mode">
+                <button class="tool-button" id="reset-btn" type="button" aria-label="Reset scene" title="Reset scene">
+                    <svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M7.75 8.25V4.75M7.75 4.75H11.25M7.75 4.75L11 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <path d="M8.2 6.1C9.35 5.08 10.87 4.5 12.5 4.5C16.09 4.5 19 7.41 19 11C19 14.59 16.09 17.5 12.5 17.5C9.67 17.5 7.26 15.69 6.38 13.17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                    </svg>
                 </button>
-                
-
-                
-
-
             </aside>
         </div>
 

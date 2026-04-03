@@ -1,25 +1,36 @@
 const scene = document.getElementById("scene");
 const grid = document.getElementById("rainbow-grid");
 const spawnButton = document.getElementById("spawn-circle-btn");
+const darkModeButton = document.getElementById("dark-mode-btn");
+const gravityButton = document.getElementById("gravity-btn");
+const jellyButton = document.getElementById("jelly-btn");
+const resetButton = document.getElementById("reset-btn");
 const toolbox = document.querySelector(".toolbox");
+let audioContext = null;
+
+const DEFAULT_JELLY = {
+    x: 0,
+    y: 0,
+    rotation: 0,
+    scaleX: 1,
+    scaleY: 1,
+    vx: 0,
+    vy: 0,
+    vRotation: 0,
+    vScaleX: 0,
+    vScaleY: 0
+};
 
 const state = {
     time: 0,
     nextBallId: 1,
     balls: [],
     drag: null,
-    jelly: {
-        x: 0,
-        y: 0,
-        rotation: 0,
-        scaleX: 1,
-        scaleY: 1,
-        vx: 0,
-        vy: 0,
-        vRotation: 0,
-        vScaleX: 0,
-        vScaleY: 0
-    }
+    darkMode: false,
+    heavyGravity: false,
+    jellyEnabled: true,
+    resetInProgress: false,
+    jelly: { ...DEFAULT_JELLY }
 };
 
 function clamp(value, min, max) {
@@ -28,6 +39,55 @@ function clamp(value, min, max) {
 
 function round(value) {
     return Math.round(value * 100) / 100;
+}
+
+function wait(ms) {
+    return new Promise((resolve) => {
+        window.setTimeout(resolve, ms);
+    });
+}
+
+function getAudioContext() {
+    if (typeof window.AudioContext !== "function" && typeof window.webkitAudioContext !== "function") {
+        return null;
+    }
+
+    if (!audioContext) {
+        const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioContextCtor();
+    }
+
+    return audioContext;
+}
+
+function playPopSound(timeOffset = 0) {
+    const context = getAudioContext();
+
+    if (!context) {
+        return;
+    }
+
+    if (context.state === "suspended") {
+        context.resume().catch(() => {});
+    }
+
+    const startTime = context.currentTime + timeOffset;
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+
+    oscillator.type = "triangle";
+    oscillator.frequency.setValueAtTime(320, startTime);
+    oscillator.frequency.exponentialRampToValueAtTime(110, startTime + 0.08);
+
+    gainNode.gain.setValueAtTime(0.0001, startTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.08, startTime + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.11);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+
+    oscillator.start(startTime);
+    oscillator.stop(startTime + 0.12);
 }
 
 function getSceneRect() {
@@ -96,7 +156,52 @@ function createBallElement(ball) {
     });
 }
 
+function resetJellyState() {
+    Object.assign(state.jelly, DEFAULT_JELLY);
+}
+
+function animateBallPop(ball, index) {
+    if (!ball.element) {
+        return Promise.resolve();
+    }
+
+    const element = ball.element;
+    const baseTransform = `translate3d(${ball.x.toFixed(2)}px, ${ball.y.toFixed(2)}px, 0)`;
+    const jitter = 4;
+    const startDelay = index * 0.04;
+
+    element.classList.add("is-popping");
+    playPopSound(startDelay);
+
+    const animation = element.animate(
+        [
+            { transform: baseTransform, opacity: 1, offset: 0 },
+            { transform: `translate3d(${(ball.x - jitter).toFixed(2)}px, ${(ball.y - 1).toFixed(2)}px, 0) scale(1.03)`, opacity: 1, offset: 0.18 },
+            { transform: `translate3d(${(ball.x + jitter).toFixed(2)}px, ${(ball.y + 1).toFixed(2)}px, 0) scale(0.98)`, opacity: 1, offset: 0.36 },
+            { transform: `translate3d(${(ball.x - jitter * 0.6).toFixed(2)}px, ${(ball.y - 1.5).toFixed(2)}px, 0) scale(1.02)`, opacity: 1, offset: 0.52 },
+            { transform: `translate3d(${ball.x.toFixed(2)}px, ${ball.y.toFixed(2)}px, 0) scale(1.08)`, opacity: 1, offset: 0.68 },
+            { transform: `translate3d(${ball.x.toFixed(2)}px, ${ball.y.toFixed(2)}px, 0) scale(0.1)`, opacity: 0, offset: 1 }
+        ],
+        {
+            duration: 280,
+            delay: startDelay * 1000,
+            easing: "cubic-bezier(0.22, 0.9, 0.36, 1)",
+            fill: "forwards"
+        }
+    );
+
+    return animation.finished
+        .catch(() => {})
+        .then(() => {
+            element.remove();
+        });
+}
+
 function spawnBall() {
+    if (state.resetInProgress) {
+        return null;
+    }
+
     const rect = getSceneRect();
     const toolboxBounds = getToolboxBounds();
     const size = clamp(rect.width * 0.05, 28, 44);
@@ -210,6 +315,10 @@ function handleWallCollision(ball, width, height) {
 }
 
 function applyJellyImpact(ball, normalX, normalY, bounds) {
+    if (!state.jellyEnabled) {
+        return;
+    }
+
     const impactSpeed = clamp(Math.hypot(ball.vx, ball.vy), 45, 260);
     const offsetX = (ball.x - bounds.centerX) / (bounds.width / 2 || 1);
     const offsetY = (ball.y - bounds.centerY) / (bounds.height / 2 || 1);
@@ -320,16 +429,20 @@ function update(dt) {
 
     const rect = getSceneRect();
     const bounds = getGridBounds();
+    const gravityStrength = state.heavyGravity ? 72 : 12;
+    const driftStrength = state.heavyGravity ? 3 : 10;
+    const floatStrength = state.heavyGravity ? 2.5 : 8;
+    const dragFactor = state.heavyGravity ? 0.992 : 0.9965;
 
     for (const ball of state.balls) {
         if (!ball.dragging) {
-            const driftX = Math.cos(state.time * 0.75 + ball.id * 0.6) * 10;
-            const driftY = Math.sin(state.time * 0.62 + ball.id * 0.8) * 8;
+            const driftX = Math.cos(state.time * 0.75 + ball.id * 0.6) * driftStrength;
+            const driftY = Math.sin(state.time * 0.62 + ball.id * 0.8) * floatStrength;
 
             ball.vx += driftX * dt;
-            ball.vy += (12 + driftY) * dt;
-            ball.vx *= Math.pow(0.9965, dt * 60);
-            ball.vy *= Math.pow(0.9965, dt * 60);
+            ball.vy += (gravityStrength + driftY) * dt;
+            ball.vx *= Math.pow(dragFactor, dt * 60);
+            ball.vy *= Math.pow(dragFactor, dt * 60);
             ball.x += ball.vx * dt;
             ball.y += ball.vy * dt;
 
@@ -387,8 +500,92 @@ function renderGameToText() {
             radius: round(ball.radius),
             dragging: ball.dragging
         })),
+        darkMode: state.darkMode,
+        heavyGravity: state.heavyGravity,
+        jellyEnabled: state.jellyEnabled,
         controls: "Use the button on the right to spawn a black circle, then drag and throw it into the square."
     });
+}
+
+function syncDarkModeButton() {
+    if (!darkModeButton) {
+        return;
+    }
+
+    const label = state.darkMode ? "Disable dark mode" : "Enable dark mode";
+
+    darkModeButton.setAttribute("aria-label", label);
+    darkModeButton.setAttribute("title", label);
+    darkModeButton.classList.toggle("is-active", state.darkMode);
+}
+
+function syncGravityButton() {
+    if (!gravityButton) {
+        return;
+    }
+
+    const label = state.heavyGravity ? "Disable heavy gravity" : "Enable heavy gravity";
+
+    gravityButton.setAttribute("aria-label", label);
+    gravityButton.setAttribute("title", label);
+    gravityButton.classList.toggle("is-active", state.heavyGravity);
+}
+
+function syncJellyButton() {
+    if (!jellyButton) {
+        return;
+    }
+
+    const label = state.jellyEnabled ? "Disable jelly motion" : "Enable jelly motion";
+
+    jellyButton.setAttribute("aria-label", label);
+    jellyButton.setAttribute("title", label);
+    jellyButton.classList.toggle("is-active", state.jellyEnabled);
+}
+
+function toggleDarkMode() {
+    state.darkMode = !state.darkMode;
+    document.body.classList.toggle("is-dark-mode", state.darkMode);
+    syncDarkModeButton();
+}
+
+function toggleGravity() {
+    state.heavyGravity = !state.heavyGravity;
+    syncGravityButton();
+}
+
+function toggleJelly() {
+    state.jellyEnabled = !state.jellyEnabled;
+    if (!state.jellyEnabled) {
+        resetJellyState();
+        render();
+    }
+    syncJellyButton();
+}
+
+function resetScene() {
+    if (state.resetInProgress) {
+        return;
+    }
+
+    const ballsToPop = [...state.balls];
+
+    state.resetInProgress = true;
+    state.drag = null;
+    state.balls = [];
+    resetJellyState();
+    render();
+
+    if (ballsToPop.length === 0) {
+        state.resetInProgress = false;
+        return;
+    }
+
+    Promise.all(ballsToPop.map((ball, index) => animateBallPop(ball, index)))
+        .finally(async () => {
+            await wait(20);
+            state.resetInProgress = false;
+        });
 }
 
 let lastFrameTime = performance.now();
@@ -416,6 +613,21 @@ window.addEventListener("pointerup", (event) => stopDrag(event.pointerId));
 window.addEventListener("pointercancel", (event) => stopDrag(event.pointerId));
 window.addEventListener("resize", render);
 spawnButton.addEventListener("click", spawnBall);
+if (darkModeButton) {
+    darkModeButton.addEventListener("click", toggleDarkMode);
+}
+if (gravityButton) {
+    gravityButton.addEventListener("click", toggleGravity);
+}
+if (jellyButton) {
+    jellyButton.addEventListener("click", toggleJelly);
+}
+if (resetButton) {
+    resetButton.addEventListener("click", resetScene);
+}
 
+syncDarkModeButton();
+syncGravityButton();
+syncJellyButton();
 render();
 window.requestAnimationFrame(animate);

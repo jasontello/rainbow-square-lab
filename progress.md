@@ -3,3 +3,6 @@ Original prompt: what i wanted to do was now make this square interactable, for 
 - 2026-03-25: Starting interactive pass. Plan is to keep the existing rainbow grid art, add a scene wrapper with a spawn button, and implement draggable floating circles with a springy jelly response on collision.
 - 2026-03-25: Added scene UI, spawn button, floating orb physics, drag-and-throw controls, and springy jelly transforms on the rainbow square.
 - 2026-03-25: Found an interaction issue during testing. The orb was spawning under the toolbox, so it could be created but not grabbed reliably. Moved spawn placement to the left of the toolbox.
+- 2026-04-02: Reworked the toolbar into a vertical icon tool palette with active-state styling for toggle tools.
+- 2026-04-02: Added Theme, Gravity, Jelly, and Reset tool behaviors. Verified in a headless browser that Spawn creates a ball, Dark Mode toggles on, Gravity toggles on, Jelly toggles off, and Reset clears spawned balls while leaving toggle states intact.
+- 2026-04-02: Upgraded Reset so balls jitter briefly, pop away, and play a synthesized pop sound. Verified in a headless browser that balls exist before reset and are cleared after the animation delay.
