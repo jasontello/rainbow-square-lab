@@ -12,17 +12,20 @@ body {
     z-index: 30;
     display: grid;
     place-items: center;
-    background: #000000;
+    background: #ffffff;
     opacity: 1;
     visibility: visible;
-    transition: opacity 1.4s ease, visibility 0s linear 1.4s;
+    transition: background-color 0.9s ease, opacity 1.4s ease, visibility 0s linear 1.4s;
+}
+
+body.is-intro-background-light .book-intro {
+    background: #ffffff;
 }
 
 .book-intro-image {
-    width: clamp(320px, 42vw, 520px);
+    width: clamp(460px, 58vw, 1060px);
     max-width: calc(100vw - 3rem);
     display: block;
-    box-shadow: 0 28px 60px rgba(0, 0, 0, 0.35);
     opacity: 1;
     transition: opacity 0.85s ease;
 }

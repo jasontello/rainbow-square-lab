@@ -12,6 +12,7 @@ const toolbox = document.querySelector(".toolbox");
 let audioContext = null;
 
 const BOOK_COVER_GRID_WIDTH_RATIO = 0.625;
+const INTRO_START_SCALE_MULTIPLIER = 0.58;
 
 const DEFAULT_JELLY = {
     x: 0,
@@ -70,6 +71,7 @@ function wait(ms) {
 function completeIntro() {
     document.body.classList.add("is-intro-complete");
     document.body.classList.remove("is-intro-playing");
+    document.body.classList.remove("is-intro-background-light");
     document.body.classList.remove("is-intro-image-fading");
 }
 
@@ -99,8 +101,9 @@ function measureIntroScale() {
     }
 
     const coverGridWidth = imageRect.width * BOOK_COVER_GRID_WIDTH_RATIO;
+    const measuredScale = (coverGridWidth / stageRect.width) * INTRO_START_SCALE_MULTIPLIER;
 
-    return clamp(coverGridWidth / stageRect.width, 0.55, 1);
+    return clamp(measuredScale, 0.38, 0.78);
 }
 
 function syncIntroScale() {
@@ -123,6 +126,7 @@ function runIntroTransition() {
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const revealDelay = prefersReducedMotion ? 120 : 1100;
+    const backgroundFadeDuration = prefersReducedMotion ? 120 : 900;
     const imageFadeDuration = prefersReducedMotion ? 120 : 850;
     const revealDuration = prefersReducedMotion ? 180 : 1800;
 
@@ -130,10 +134,13 @@ function runIntroTransition() {
         syncIntroScale();
         render();
         window.setTimeout(() => {
-            document.body.classList.add("is-intro-image-fading");
             window.setTimeout(() => {
-                startIntroReveal(revealDuration);
-            }, imageFadeDuration);
+                document.body.classList.add("is-intro-image-fading");
+                window.setTimeout(() => {
+                    startIntroReveal(revealDuration);
+                }, imageFadeDuration);
+            }, backgroundFadeDuration);
+            document.body.classList.add("is-intro-background-light");
         }, revealDelay);
     };
 
