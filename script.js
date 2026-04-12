@@ -8,11 +8,12 @@ const jellyButton = document.getElementById("jelly-btn");
 const resetButton = document.getElementById("reset-btn");
 const introOverlay = document.getElementById("book-intro");
 const introImage = document.getElementById("book-intro-image");
+const introTrigger = document.getElementById("book-intro-trigger");
 const toolbox = document.querySelector(".toolbox");
 let audioContext = null;
 
 const BOOK_COVER_GRID_WIDTH_RATIO = 0.625;
-const INTRO_START_SCALE_MULTIPLIER = 0.58;
+const INTRO_START_SCALE_MULTIPLIER = 0.634;
 
 const DEFAULT_JELLY = {
     x: 0,
@@ -36,9 +37,11 @@ const state = {
     heavyGravity: false,
     jellyEnabled: true,
     resetInProgress: false,
+    introStarted: false,
     intro: {
-        startScale: 1,
-        startY: 89,
+        startScale: 1.0,
+        startX: 3,
+        startY: 95,
         progress: 0,
         durationMs: 1600,
         revealing: false
@@ -71,8 +74,8 @@ function wait(ms) {
 function completeIntro() {
     document.body.classList.add("is-intro-complete");
     document.body.classList.remove("is-intro-playing");
+    document.body.classList.remove("is-intro-active");
     document.body.classList.remove("is-intro-background-light");
-    document.body.classList.remove("is-intro-image-fading");
 }
 
 function getIntroScale() {
@@ -88,13 +91,23 @@ function getIntroOffsetY() {
     return state.intro.startY * (1 - easedProgress);
 }
 
+function getIntroOffsetX() {
+    const easedProgress = easeInOutCubic(state.intro.progress);
+
+    return state.intro.startX * (1 - easedProgress);
+}
+
 function measureIntroScale() {
     if (!introImage || !gridStage) {
         return 1;
     }
 
+    const previousTransform = gridStage.style.transform;
+
+    gridStage.style.transform = "none";
     const imageRect = introImage.getBoundingClientRect();
     const stageRect = gridStage.getBoundingClientRect();
+    gridStage.style.transform = previousTransform;
 
     if (!imageRect.width || !stageRect.width) {
         return 1;
@@ -103,7 +116,7 @@ function measureIntroScale() {
     const coverGridWidth = imageRect.width * BOOK_COVER_GRID_WIDTH_RATIO;
     const measuredScale = (coverGridWidth / stageRect.width) * INTRO_START_SCALE_MULTIPLIER;
 
-    return clamp(measuredScale, 0.38, 0.78);
+    return clamp(measuredScale, 0.38, 0.84);
 }
 
 function syncIntroScale() {
@@ -125,32 +138,51 @@ function runIntroTransition() {
     }
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const revealDelay = prefersReducedMotion ? 120 : 1100;
-    const backgroundFadeDuration = prefersReducedMotion ? 120 : 900;
-    const imageFadeDuration = prefersReducedMotion ? 120 : 850;
+    const backgroundFadeDuration = prefersReducedMotion ? 120 : 240;
     const revealDuration = prefersReducedMotion ? 180 : 1800;
 
     const startRevealTimer = () => {
+        if (state.introStarted) {
+            return;
+        }
+
+        state.introStarted = true;
+        document.body.classList.add("is-intro-active");
         syncIntroScale();
         render();
+
         window.setTimeout(() => {
-            window.setTimeout(() => {
-                document.body.classList.add("is-intro-image-fading");
-                window.setTimeout(() => {
-                    startIntroReveal(revealDuration);
-                }, imageFadeDuration);
-            }, backgroundFadeDuration);
-            document.body.classList.add("is-intro-background-light");
-        }, revealDelay);
+            document.body.classList.add("is-intro-image-fading");
+            startIntroReveal(revealDuration);
+        }, backgroundFadeDuration);
+        document.body.classList.add("is-intro-background-light");
+    };
+
+    const prepareIntro = () => {
+        syncIntroScale();
+        render();
+    };
+
+    const handleIntroKeydown = (event) => {
+        if (event.key !== "Enter" && event.key !== " ") {
+            return;
+        }
+
+        event.preventDefault();
+        startRevealTimer();
     };
 
     if (introImage.complete) {
-        startRevealTimer();
-        return;
+        prepareIntro();
+    } else {
+        introImage.addEventListener("load", prepareIntro, { once: true });
+        introImage.addEventListener("error", prepareIntro, { once: true });
     }
 
-    introImage.addEventListener("load", startRevealTimer, { once: true });
-    introImage.addEventListener("error", startRevealTimer, { once: true });
+    const triggerElement = introTrigger || introImage;
+
+    triggerElement.addEventListener("click", startRevealTimer);
+    triggerElement.addEventListener("keydown", handleIntroKeydown);
 }
 
 function getAudioContext() {
@@ -581,10 +613,11 @@ function update(dt) {
 function render() {
     const jelly = state.jelly;
     const introScale = getIntroScale();
+    const introOffsetX = getIntroOffsetX();
     const introOffsetY = getIntroOffsetY();
 
     if (gridStage) {
-        gridStage.style.transform = `translateY(${introOffsetY.toFixed(2)}px) scale(${introScale.toFixed(3)})`;
+        gridStage.style.transform = `translate(${introOffsetX.toFixed(2)}px, ${introOffsetY.toFixed(2)}px) scale(${introScale.toFixed(3)})`;
     }
 
     grid.style.transform = [

@@ -3,6 +3,7 @@ body {
     font-family: Helvetica, Arial, sans-serif;
     background: #ffffff;
     color: #111827;
+    overflow: hidden;
     transition: background-color 0.25s ease, color 0.25s ease;
 }
 
@@ -12,22 +13,44 @@ body {
     z-index: 30;
     display: grid;
     place-items: center;
-    background: #ffffff;
+    background: transparent;
     opacity: 1;
     visibility: visible;
     transition: background-color 0.9s ease, opacity 1.4s ease, visibility 0s linear 1.4s;
 }
 
 body.is-intro-background-light .book-intro {
-    background: #ffffff;
+    background: transparent;
+}
+
+.book-intro-frame {
+    position: relative;
+    width: clamp(460px, 58vw, 1060px);
+    max-width: calc(100vw - 3rem);
 }
 
 .book-intro-image {
-    width: clamp(460px, 58vw, 1060px);
-    max-width: calc(100vw - 3rem);
+    width: 100%;
     display: block;
-    opacity: 1;
+    opacity: 0.82;
     transition: opacity 0.85s ease;
+}
+
+.book-intro-trigger {
+    position: absolute;
+    left: 25%;
+    top: 2.6%;
+    width: 50%;
+    height: 95%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+body.is-intro-active .book-intro-trigger {
+    cursor: default;
+    pointer-events: none;
 }
 
 body.is-intro-image-fading .book-intro-image {
@@ -41,22 +64,16 @@ body.is-intro-complete .book-intro {
 }
 
 .page {
-    min-height: 100vh;
+    height: 100vh;
     padding: 1rem;
     display: grid;
     grid-template-rows: auto 1fr;
     gap: 1rem;
+    box-sizing: border-box;
     opacity: 1;
     filter: blur(0);
     transition: opacity 1s ease 0.1s, filter 1s ease 0.1s;
 }
-
-body.is-intro-playing .page {
-    opacity: 0;
-    filter: blur(10px);
-    pointer-events: none;
-}
-
 .scene {
     position: relative;
     min-height: 70vh;
