@@ -6,6 +6,7 @@ const darkModeButton = document.getElementById("dark-mode-btn");
 const gravityButton = document.getElementById("gravity-btn");
 const jellyButton = document.getElementById("jelly-btn");
 const resetButton = document.getElementById("reset-btn");
+const backButton = document.getElementById("back-button");
 const introOverlay = document.getElementById("book-intro");
 const introImage = document.getElementById("book-intro-image");
 const introTrigger = document.getElementById("book-intro-trigger");
@@ -78,6 +79,10 @@ function completeIntro() {
     document.body.classList.remove("is-intro-background-light");
 }
 
+function markIntroFinished() {
+    document.body.classList.add("is-intro-finished");
+}
+
 function getIntroScale() {
     const intro = state.intro;
     const easedProgress = easeInOutCubic(intro.progress);
@@ -126,8 +131,109 @@ function syncIntroScale() {
 function startIntroReveal(durationMs) {
     state.intro.durationMs = durationMs;
     state.intro.progress = 0;
-    state.intro.revealing = true;
+    document.body.classList.remove("is-intro-returning");
+    document.body.classList.remove("is-intro-finished");
     completeIntro();
+
+    if (window.gsap) {
+        state.intro.revealing = false;
+        window.gsap.to(state.intro, {
+            progress: 1,
+            duration: durationMs / 1000,
+            ease: "power3.inOut",
+            onUpdate: render,
+            onComplete: markIntroFinished
+        });
+        return;
+    }
+
+    state.intro.revealing = true;
+}
+
+function resetIntroToBook() {
+    if (document.body.classList.contains("is-intro-returning")) {
+        return;
+    }
+
+    const tabs = document.querySelector(".book-tabs");
+    const fadingElements = [introImage, tabs].filter(Boolean);
+
+    if (window.gsap) {
+        window.gsap.killTweensOf(state.intro);
+        window.gsap.killTweensOf(fadingElements);
+        window.gsap.set(fadingElements, { opacity: 0 });
+    } else {
+        fadingElements.forEach((element) => {
+            element.style.opacity = "0";
+        });
+    }
+
+    state.balls.forEach((ball) => {
+        if (ball.element) {
+            ball.element.remove();
+        }
+    });
+
+    state.balls = [];
+    state.drag = null;
+    state.resetInProgress = false;
+    state.introStarted = true;
+    state.intro.progress = 1;
+    state.intro.revealing = false;
+    resetJellyState();
+
+    document.body.classList.add("is-intro-playing");
+    document.body.classList.add("is-intro-returning");
+    document.body.classList.add("is-intro-image-fading");
+    document.body.classList.remove("is-intro-active");
+    document.body.classList.remove("is-intro-complete");
+    document.body.classList.remove("is-intro-finished");
+    document.body.classList.remove("is-intro-background-light");
+
+    syncIntroScale();
+    render();
+
+    const finishReturn = () => {
+        if (window.gsap) {
+            window.gsap.set(fadingElements, { clearProps: "opacity" });
+        }
+
+        state.introStarted = false;
+        state.intro.progress = 0;
+        state.intro.revealing = false;
+
+        document.body.classList.add("is-intro-playing");
+        document.body.classList.remove("is-intro-returning");
+        document.body.classList.remove("is-intro-active");
+        document.body.classList.remove("is-intro-complete");
+        document.body.classList.remove("is-intro-finished");
+        document.body.classList.remove("is-intro-background-light");
+        document.body.classList.remove("is-intro-image-fading");
+
+        syncIntroScale();
+        render();
+    };
+
+    if (!window.gsap) {
+        finishReturn();
+        return;
+    }
+
+    const returnDelaySeconds = 0.24;
+    const returnMoveDurationSeconds = 0.95;
+
+    window.gsap.timeline({ onComplete: finishReturn })
+        .to(state.intro, {
+            progress: 0,
+            duration: returnMoveDurationSeconds,
+            ease: "power3.inOut",
+            onUpdate: render
+        }, returnDelaySeconds)
+        .to(fadingElements, {
+            opacity: (index, element) => element === introImage ? 0.82 : 1,
+            duration: 0.42,
+            ease: "power2.out"
+        }, returnDelaySeconds + returnMoveDurationSeconds);
 }
 
 function runIntroTransition() {
@@ -141,6 +247,22 @@ function runIntroTransition() {
     const backgroundFadeDuration = prefersReducedMotion ? 120 : 240;
     const revealDuration = prefersReducedMotion ? 180 : 1800;
 
+    const playIntroWithGsap = () => {
+        const tabs = document.querySelector(".book-tabs");
+        const fadingElements = [introImage, tabs].filter(Boolean);
+
+        window.gsap.timeline()
+            .to(fadingElements, {
+                opacity: 0,
+                duration: 0.42,
+                ease: "power2.out"
+            }, backgroundFadeDuration / 1000)
+            .call(() => {
+                document.body.classList.add("is-intro-image-fading");
+                startIntroReveal(revealDuration);
+            }, null, backgroundFadeDuration / 1000);
+    };
+
     const startRevealTimer = () => {
         if (state.introStarted) {
             return;
@@ -150,6 +272,11 @@ function runIntroTransition() {
         document.body.classList.add("is-intro-active");
         syncIntroScale();
         render();
+
+        if (window.gsap) {
+            playIntroWithGsap();
+            return;
+        }
 
         window.setTimeout(() => {
             document.body.classList.add("is-intro-image-fading");
@@ -573,6 +700,7 @@ function updateIntro(dt) {
 
     if (intro.progress >= 1) {
         intro.revealing = false;
+        markIntroFinished();
     }
 }
 
@@ -787,6 +915,9 @@ if (jellyButton) {
 }
 if (resetButton) {
     resetButton.addEventListener("click", resetScene);
+}
+if (backButton) {
+    backButton.addEventListener("click", resetIntroToBook);
 }
 
 syncDarkModeButton();

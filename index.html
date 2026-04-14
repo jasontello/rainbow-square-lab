@@ -13,6 +13,13 @@
     <div class="book-intro" id="book-intro">
         <div class="book-intro-frame">
             <img class="book-intro-image" id="book-intro-image" src="assets/designersdictionaryofcolorpow.webp" alt="">
+            <div class="book-tabs" aria-hidden="true">
+                <span class="book-tab book-tab-glossary">Glossary</span>
+                <span class="book-tab book-tab-warm">Warm Colors</span>
+                <span class="book-tab book-tab-cool">Coolor Colors</span>
+                <span class="book-tab book-tab-neutral">Neutral Colors</span>
+                <span class="book-tab book-tab-speciality">Speciality Colors</span>
+            </div>
             <button class="book-intro-trigger" id="book-intro-trigger" type="button" aria-label="Enter Rainbow Grid"></button>
         </div>
     </div>
@@ -254,10 +261,15 @@
                     </svg>
                 </button>
             </aside>
+
+            <button class="back-button" id="back-button" type="button" aria-label="Go back to book cover">
+                Go back
+            </button>
         </div>
 
     </main> 
 
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
