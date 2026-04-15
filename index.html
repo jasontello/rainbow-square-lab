@@ -13,16 +13,44 @@
     <div class="book-intro" id="book-intro">
         <div class="book-intro-frame">
             <img class="book-intro-image" id="book-intro-image" src="assets/designersdictionaryofcolorpow.webp" alt="">
-            <div class="book-tabs" aria-hidden="true">
-                <span class="book-tab book-tab-glossary">Glossary</span>
+            <div class="book-tabs">
+                <button class="book-tab book-tab-glossary" id="glossary-tab" type="button">Glossary</button>
                 <span class="book-tab book-tab-warm">Warm Colors</span>
                 <span class="book-tab book-tab-cool">Coolor Colors</span>
                 <span class="book-tab book-tab-neutral">Neutral Colors</span>
                 <span class="book-tab book-tab-speciality">Speciality Colors</span>
             </div>
-            <button class="book-intro-trigger" id="book-intro-trigger" type="button" aria-label="Enter Rainbow Grid"></button>
         </div>
     </div>
+
+    <section class="glossary-page" id="glossary-page" aria-hidden="true">
+        <button class="glossary-close" id="glossary-close" type="button">Back to book</button>
+
+        <div class="glossary-spread">
+            <div class="glossary-wheel-shell" aria-label="Glossary selector">
+                <div class="glossary-selector-badge" aria-hidden="true">GL</div>
+                <button class="glossary-wheel-option" type="button" data-glossary-index="0">Saturation</button>
+                <button class="glossary-wheel-option" type="button" data-glossary-index="1">Secondary colors</button>
+                <button class="glossary-wheel-option" type="button" data-glossary-index="2">Shade or tone</button>
+                <button class="glossary-wheel-option" type="button" data-glossary-index="3">Tertiary colors</button>
+                <button class="glossary-wheel-option" type="button" data-glossary-index="4">Tint</button>
+                <button class="glossary-wheel-option" type="button" data-glossary-index="5">Value or lightness</button>
+                <button class="glossary-wheel-option" type="button" data-glossary-index="6">CMYK</button>
+                <button class="glossary-wheel-option" type="button" data-glossary-index="7">Hue</button>
+                <button class="glossary-wheel-option" type="button" data-glossary-index="8">PMS</button>
+                <button class="glossary-wheel-option" type="button" data-glossary-index="9">Primary colors</button>
+                <button class="glossary-wheel-option" type="button" data-glossary-index="10">Purity</button>
+                <button class="glossary-wheel-option" type="button" data-glossary-index="11">RGB</button>
+            </div>
+
+            <article class="glossary-detail" aria-live="polite">
+                <p class="glossary-kicker">Glossary</p>
+                <p class="glossary-number" id="glossary-number">01</p>
+                <h1 id="glossary-title">Saturation</h1>
+                <p class="glossary-intro" id="glossary-description">Saturation describes how intense or pure a color feels. A highly saturated color feels vivid, while a less saturated color feels muted or gray.</p>
+            </article>
+        </div>
+    </section>
 
     <main class="page">
         <div class="credits">

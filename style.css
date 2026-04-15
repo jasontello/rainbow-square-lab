@@ -16,6 +16,7 @@ body {
     background: transparent;
     opacity: 1;
     visibility: visible;
+    pointer-events: none;
     transition: background-color 0.9s ease, opacity 1.4s ease, visibility 0s linear 1.4s;
 }
 
@@ -27,6 +28,7 @@ body.is-intro-background-light .book-intro {
     position: relative;
     width: clamp(460px, 58vw, 1060px);
     max-width: calc(100vw - 3rem);
+    pointer-events: none;
 }
 
 .book-intro-image {
@@ -55,8 +57,10 @@ body.is-intro-background-light .book-intro {
     place-items: center;
     box-sizing: border-box;
     padding: 0.5rem 0.16rem;
+    border: 0;
     border-radius: 0 0.45rem 0.45rem 0;
     color: #111111;
+    font: inherit;
     font-size: 0.49rem;
     font-weight: 700;
     letter-spacing: 0.1em;
@@ -65,6 +69,7 @@ body.is-intro-background-light .book-intro {
     writing-mode: vertical-rl;
     text-orientation: mixed;
     box-shadow: 3px 4px 10px rgba(17, 24, 39, 0.16);
+    cursor: default;
     transform: translateX(0);
     transition:
         transform 0.22s ease,
@@ -92,6 +97,12 @@ body.is-intro-background-light .book-intro {
     box-shadow:
         0 0 0 1px rgba(17, 24, 39, 0.12),
         4px 5px 12px rgba(17, 24, 39, 0.18);
+    cursor: pointer;
+}
+
+.book-tab-glossary:focus-visible {
+    outline: 2px solid rgba(17, 24, 39, 0.8);
+    outline-offset: 4px;
 }
 
 .book-tab-warm {
@@ -121,29 +132,6 @@ body.is-intro-returning .book-tabs {
     pointer-events: none;
 }
 
-.book-intro-trigger {
-    position: absolute;
-    left: 25%;
-    top: 2.6%;
-    z-index: 1;
-    width: 50%;
-    height: 95%;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-}
-
-body.is-intro-active .book-intro-trigger {
-    cursor: default;
-    pointer-events: none;
-}
-
-body.is-intro-returning .book-intro-trigger {
-    cursor: default;
-    pointer-events: none;
-}
-
 body.is-intro-image-fading .book-intro-image {
     opacity: 0;
 }
@@ -159,6 +147,159 @@ body.is-intro-returning .book-intro {
     visibility: visible;
     pointer-events: none;
     transition: none;
+}
+
+.glossary-page {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: rgb(255, 252, 238);
+    color: #15120c;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.72);
+    transform-origin: 78% 18%;
+    visibility: hidden;
+}
+
+body.is-glossary-open .glossary-page {
+    pointer-events: auto;
+    visibility: visible;
+}
+
+.glossary-close {
+    position: absolute;
+    left: 1.25rem;
+    bottom: 1.25rem;
+    z-index: 2;
+    padding: 0.65rem 0.95rem;
+    border: 1px solid #15120c;
+    border-radius: 999px;
+    background: #15120c;
+    color: rgb(255, 252, 238);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        background-color 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease;
+}
+
+.glossary-close:hover {
+    background: transparent;
+    color: #15120c;
+    transform: translateY(-2px);
+}
+
+.glossary-spread {
+    width: min(1280px, calc(100vw - 3rem));
+    min-height: min(660px, calc(100vh - 4rem));
+    display: grid;
+    grid-template-columns: minmax(520px, 1.05fr) minmax(320px, 0.8fr);
+    gap: clamp(2rem, 5vw, 5rem);
+    align-items: center;
+}
+
+.glossary-kicker {
+    margin: 0 0 1rem;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+}
+
+.glossary-number {
+    margin: 0 0 0.6rem;
+    font-size: clamp(3.4rem, 7vw, 7rem);
+    font-weight: 800;
+    letter-spacing: -0.08em;
+    line-height: 0.9;
+}
+
+.glossary-detail h1 {
+    max-width: 12ch;
+    margin: 0;
+    font-size: clamp(3.6rem, 8vw, 7.5rem);
+    font-weight: 800;
+    line-height: 0.88;
+    letter-spacing: -0.075em;
+    text-transform: capitalize;
+}
+
+.glossary-intro {
+    max-width: 34rem;
+    margin: 1.5rem 0 0;
+    font-size: clamp(1rem, 1.5vw, 1.25rem);
+    line-height: 1.55;
+}
+
+.glossary-wheel-shell {
+    position: relative;
+    min-height: 680px;
+    overflow: visible;
+}
+
+.glossary-selector-badge {
+    position: absolute;
+    z-index: 4;
+    top: 50%;
+    left: 0;
+    width: clamp(4.25rem, 8vw, 7rem);
+    height: clamp(3rem, 5vw, 4.6rem);
+    display: grid;
+    place-items: center;
+    background: #15120c;
+    color: rgb(255, 252, 238);
+    clip-path: polygon(0 0, 78% 0, 100% 50%, 78% 100%, 0 100%);
+    font-size: clamp(1.25rem, 2.8vw, 2.7rem);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.glossary-wheel-option {
+    position: absolute;
+    z-index: 3;
+    top: 50%;
+    left: clamp(6rem, 12vw, 10rem);
+    min-width: max-content;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: rgba(21, 18, 12, 0.2);
+    font: inherit;
+    font-size: clamp(2.2rem, 4.8vw, 5.35rem);
+    font-weight: 800;
+    letter-spacing: -0.055em;
+    line-height: 0.9;
+    text-align: left;
+    cursor: pointer;
+    transform-origin: left center;
+    transition:
+        color 0.24s ease,
+        opacity 0.24s ease,
+        transform 0.36s ease;
+}
+
+.glossary-wheel-option.is-active {
+    color: #ef382f;
+    font-size: clamp(2.6rem, 5.4vw, 6.2rem);
+}
+
+.glossary-wheel-option:hover {
+    color: #ef382f;
+}
+
+.glossary-detail {
+    min-height: 420px;
+    display: grid;
+    align-content: center;
 }
 
 .page {
@@ -195,6 +336,17 @@ body.is-intro-returning .book-intro {
     position: relative;
     z-index: 2;
     transform-origin: center;
+}
+
+body.is-intro-playing:not(.is-intro-active) .rainbow-grid-stage {
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+body.is-intro-active .rainbow-grid-stage,
+body.is-intro-playing.is-intro-returning .rainbow-grid-stage {
+    cursor: default;
+    pointer-events: none;
 }
 
 .credits {
@@ -485,6 +637,30 @@ body.is-dark-mode .tool-icon-sun {
 
     .rainbow-grid {
         width: min(62vw, 420px);
+    }
+
+    .glossary-spread {
+        width: min(680px, calc(100vw - 2rem));
+        min-height: calc(100vh - 5rem);
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .glossary-wheel-shell {
+        min-height: 420px;
+    }
+
+    .glossary-wheel-option {
+        left: clamp(4.6rem, 18vw, 7rem);
+        font-size: clamp(1.4rem, 9vw, 3.2rem);
+    }
+
+    .glossary-wheel-option.is-active {
+        font-size: clamp(1.8rem, 10vw, 3.8rem);
+    }
+
+    .glossary-detail {
+        min-height: auto;
     }
 }
 

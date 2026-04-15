@@ -9,12 +9,72 @@ const resetButton = document.getElementById("reset-btn");
 const backButton = document.getElementById("back-button");
 const introOverlay = document.getElementById("book-intro");
 const introImage = document.getElementById("book-intro-image");
-const introTrigger = document.getElementById("book-intro-trigger");
+const glossaryTab = document.getElementById("glossary-tab");
+const glossaryPage = document.getElementById("glossary-page");
+const glossaryClose = document.getElementById("glossary-close");
+const glossaryWheelShell = document.querySelector(".glossary-wheel-shell");
+const glossaryOptions = Array.from(document.querySelectorAll("[data-glossary-index]"));
+const glossaryNumber = document.getElementById("glossary-number");
+const glossaryTitle = document.getElementById("glossary-title");
+const glossaryDescription = document.getElementById("glossary-description");
 const toolbox = document.querySelector(".toolbox");
 let audioContext = null;
 
 const BOOK_COVER_GRID_WIDTH_RATIO = 0.625;
 const INTRO_START_SCALE_MULTIPLIER = 0.634;
+const GLOSSARY_WHEEL_SCROLL_COOLDOWN_MS = 100;
+const GLOSSARY_VERTICAL_STEP_PX = 66;
+
+const GLOSSARY_TERMS = [
+    {
+        title: "Saturation",
+        description: "Saturation describes how intense or pure a color feels. A highly saturated color feels vivid, while a less saturated color feels muted or gray."
+    },
+    {
+        title: "Secondary colors",
+        description: "Secondary colors are made by mixing two primary colors. Orange, green, and violet are the classic secondary colors in painting and color theory."
+    },
+    {
+        title: "Shade or tone",
+        description: "A shade is made by adding black to a color. A tone is made by adding gray, which softens the color without pushing it fully toward black."
+    },
+    {
+        title: "Tertiary colors",
+        description: "Tertiary colors are made by mixing a primary color with a neighboring secondary color, creating in-between colors like red-orange or blue-green."
+    },
+    {
+        title: "Tint",
+        description: "A tint is made by adding white to a color. Tints feel lighter, softer, and often more delicate than the original hue."
+    },
+    {
+        title: "Value or lightness",
+        description: "Value, also called lightness, describes how light or dark a color is. It helps create contrast, hierarchy, and depth even without changing hue."
+    },
+    {
+        title: "CMYK",
+        description: "CMYK is a print color system based on cyan, magenta, yellow, and black. Printed color is built through layered ink and tiny halftone dots."
+    },
+    {
+        title: "Hue",
+        description: "Hue is the name or identity of a color, like red, green, yellow, or blue. It describes where a color lives on the visible spectrum."
+    },
+    {
+        title: "PMS",
+        description: "PMS stands for Pantone Matching System. It is a standardized print color system used to reproduce specific colors consistently."
+    },
+    {
+        title: "Primary colors",
+        description: "Primary colors are base colors that can be mixed to create other colors. In traditional color theory, red, yellow, and blue are the primaries."
+    },
+    {
+        title: "Purity",
+        description: "Purity describes how much a color has been mixed with another color. A pure color feels clear and intense; added color reduces that purity."
+    },
+    {
+        title: "RGB",
+        description: "RGB is a screen color system based on red, green, and blue light. Digital displays combine these light channels to create color."
+    }
+];
 
 const DEFAULT_JELLY = {
     x: 0,
@@ -38,6 +98,9 @@ const state = {
     heavyGravity: false,
     jellyEnabled: true,
     resetInProgress: false,
+    glossaryOpen: false,
+    glossarySelectedIndex: 0,
+    lastGlossaryScrollTime: 0,
     introStarted: false,
     intro: {
         startScale: 1.0,
@@ -210,6 +273,7 @@ function resetIntroToBook() {
         document.body.classList.remove("is-intro-background-light");
         document.body.classList.remove("is-intro-image-fading");
 
+        enableGridIntroTrigger();
         syncIntroScale();
         render();
     };
@@ -264,11 +328,12 @@ function runIntroTransition() {
     };
 
     const startRevealTimer = () => {
-        if (state.introStarted) {
+        if (state.introStarted || state.glossaryOpen) {
             return;
         }
 
         state.introStarted = true;
+        disableGridIntroTrigger();
         document.body.classList.add("is-intro-active");
         syncIntroScale();
         render();
@@ -286,6 +351,7 @@ function runIntroTransition() {
     };
 
     const prepareIntro = () => {
+        enableGridIntroTrigger();
         syncIntroScale();
         render();
     };
@@ -306,10 +372,206 @@ function runIntroTransition() {
         introImage.addEventListener("error", prepareIntro, { once: true });
     }
 
-    const triggerElement = introTrigger || introImage;
+    const triggerElement = gridStage || introImage;
 
     triggerElement.addEventListener("click", startRevealTimer);
     triggerElement.addEventListener("keydown", handleIntroKeydown);
+}
+
+function enableGridIntroTrigger() {
+    if (!gridStage || state.introStarted) {
+        return;
+    }
+
+    gridStage.setAttribute("role", "button");
+    gridStage.setAttribute("tabindex", "0");
+    gridStage.setAttribute("aria-label", "Enter Rainbow Grid");
+}
+
+function disableGridIntroTrigger() {
+    if (!gridStage) {
+        return;
+    }
+
+    gridStage.removeAttribute("role");
+    gridStage.removeAttribute("tabindex");
+    gridStage.removeAttribute("aria-label");
+}
+
+function getGlossaryTransformOrigin() {
+    if (!glossaryTab) {
+        return "78% 18%";
+    }
+
+    const rect = glossaryTab.getBoundingClientRect();
+    const originX = ((rect.left + rect.width / 2) / window.innerWidth) * 100;
+    const originY = ((rect.top + rect.height / 2) / window.innerHeight) * 100;
+
+    return `${originX.toFixed(2)}% ${originY.toFixed(2)}%`;
+}
+
+function updateGlossarySelector(selectedIndex = state.glossarySelectedIndex) {
+    const selectedTerm = GLOSSARY_TERMS[selectedIndex];
+
+    if (!selectedTerm) {
+        return;
+    }
+
+    state.glossarySelectedIndex = selectedIndex;
+
+    if (glossaryNumber) {
+        glossaryNumber.textContent = String(selectedIndex + 1).padStart(2, "0");
+    }
+
+    if (glossaryTitle) {
+        glossaryTitle.textContent = selectedTerm.title;
+    }
+
+    if (glossaryDescription) {
+        glossaryDescription.textContent = selectedTerm.description;
+    }
+
+    glossaryOptions.forEach((option, optionIndex) => {
+        const offset = optionIndex - selectedIndex;
+        const distance = Math.abs(offset);
+        const y = offset * GLOSSARY_VERTICAL_STEP_PX;
+        const scale = Math.max(0.72, 1 - distance * 0.035);
+        const opacity = Math.max(0.12, 1 - distance * 0.11);
+
+        option.classList.toggle("is-active", optionIndex === selectedIndex);
+        option.style.transform = `translateY(calc(-50% + ${y}px)) scale(${scale})`;
+        option.style.opacity = opacity.toFixed(2);
+        option.setAttribute("aria-pressed", String(optionIndex === selectedIndex));
+    });
+}
+
+function selectGlossaryTerm(index) {
+    updateGlossarySelector(index);
+
+    if (!window.gsap || !glossaryTitle || !glossaryDescription) {
+        return;
+    }
+
+    window.gsap.fromTo([glossaryTitle, glossaryDescription], {
+        opacity: 0,
+        y: 14
+    }, {
+        opacity: 1,
+        y: 0,
+        duration: 0.32,
+        ease: "power2.out",
+        stagger: 0.04
+    });
+}
+
+function stepGlossarySelection(direction) {
+    const nextIndex = clamp(
+        state.glossarySelectedIndex + direction,
+        0,
+        GLOSSARY_TERMS.length - 1
+    );
+
+    if (nextIndex === state.glossarySelectedIndex) {
+        return;
+    }
+
+    selectGlossaryTerm(nextIndex);
+}
+
+function handleGlossaryWheel(event) {
+    if (!state.glossaryOpen) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const now = performance.now();
+
+    if (now - state.lastGlossaryScrollTime < GLOSSARY_WHEEL_SCROLL_COOLDOWN_MS) {
+        return;
+    }
+
+    if (Math.abs(event.deltaY) < 8) {
+        return;
+    }
+
+    state.lastGlossaryScrollTime = now;
+    stepGlossarySelection(event.deltaY > 0 ? 1 : -1);
+}
+
+function openGlossaryPage(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    if (!glossaryPage || state.glossaryOpen) {
+        return;
+    }
+
+    state.glossaryOpen = true;
+    disableGridIntroTrigger();
+    updateGlossarySelector();
+    glossaryPage.setAttribute("aria-hidden", "false");
+    document.body.classList.add("is-glossary-open");
+
+    const transformOrigin = getGlossaryTransformOrigin();
+
+    if (!window.gsap) {
+        glossaryPage.style.opacity = "1";
+        glossaryPage.style.transform = "scale(1)";
+        glossaryPage.style.transformOrigin = transformOrigin;
+        return;
+    }
+
+    window.gsap.killTweensOf(glossaryPage);
+    window.gsap.fromTo(glossaryPage, {
+        opacity: 0,
+        scale: 0.72,
+        transformOrigin
+    }, {
+        opacity: 1,
+        scale: 1,
+        duration: 0.82,
+        ease: "power3.inOut"
+    });
+}
+
+function closeGlossaryPage() {
+    if (!glossaryPage || !state.glossaryOpen) {
+        return;
+    }
+
+    const finishClose = () => {
+        state.glossaryOpen = false;
+        glossaryPage.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("is-glossary-open");
+
+        if (window.gsap) {
+            window.gsap.set(glossaryPage, { clearProps: "opacity,scale,transform,transformOrigin" });
+        } else {
+            glossaryPage.style.opacity = "";
+            glossaryPage.style.transform = "";
+            glossaryPage.style.transformOrigin = "";
+        }
+
+        enableGridIntroTrigger();
+    };
+
+    if (!window.gsap) {
+        finishClose();
+        return;
+    }
+
+    window.gsap.killTweensOf(glossaryPage);
+    window.gsap.to(glossaryPage, {
+        opacity: 0,
+        scale: 0.72,
+        transformOrigin: getGlossaryTransformOrigin(),
+        duration: 0.52,
+        ease: "power2.inOut",
+        onComplete: finishClose
+    });
 }
 
 function getAudioContext() {
@@ -903,6 +1165,24 @@ window.addEventListener("resize", () => {
     syncIntroScale();
     render();
 });
+window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+        closeGlossaryPage();
+        return;
+    }
+
+    if (!state.glossaryOpen) {
+        return;
+    }
+
+    if (event.key === "ArrowDown") {
+        event.preventDefault();
+        stepGlossarySelection(1);
+    } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        stepGlossarySelection(-1);
+    }
+});
 spawnButton.addEventListener("click", spawnBall);
 if (darkModeButton) {
     darkModeButton.addEventListener("click", toggleDarkMode);
@@ -919,10 +1199,25 @@ if (resetButton) {
 if (backButton) {
     backButton.addEventListener("click", resetIntroToBook);
 }
+if (glossaryTab) {
+    glossaryTab.addEventListener("click", openGlossaryPage);
+}
+if (glossaryClose) {
+    glossaryClose.addEventListener("click", closeGlossaryPage);
+}
+if (glossaryWheelShell) {
+    glossaryWheelShell.addEventListener("wheel", handleGlossaryWheel, { passive: false });
+}
+glossaryOptions.forEach((option) => {
+    option.addEventListener("click", () => {
+        selectGlossaryTerm(Number(option.dataset.glossaryIndex));
+    });
+});
 
 syncDarkModeButton();
 syncGravityButton();
 syncJellyButton();
+updateGlossarySelector();
 syncIntroScale();
 runIntroTransition();
 render();
