@@ -4,300 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Rainbow Grid</title>
-
+    <title>Rainbow Square Lab</title>
     <link rel="stylesheet" href="style.css">
-
   </head>
-  <body class="is-intro-playing">
-    <div class="book-intro" id="book-intro">
-        <div class="book-intro-frame">
-            <img class="book-intro-image" id="book-intro-image" src="assets/designersdictionaryofcolorpow.webp" alt="">
-            <div class="book-tabs">
-                <button class="book-tab book-tab-glossary" id="glossary-tab" type="button">Glossary</button>
-                <span class="book-tab book-tab-warm">Warm Colors</span>
-                <span class="book-tab book-tab-cool">Coolor Colors</span>
-                <span class="book-tab book-tab-neutral">Neutral Colors</span>
-                <span class="book-tab book-tab-speciality">Speciality Colors</span>
-            </div>
+  <body>
+    <main class="landing-page">
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a class="brand-mark" href="#" aria-label="Rainbow Square Lab home">
+          <span></span>
+          Rainbow Square Lab
+        </a>
+        <div class="nav-links" aria-label="Project sections">
+          <a href="#system">System</a>
+          <a href="#motion">Motion</a>
+          <a href="#palette">Palette</a>
         </div>
-    </div>
+      </nav>
 
-    <section class="glossary-page" id="glossary-page" aria-hidden="true">
-        <button class="glossary-close" id="glossary-close" type="button">Back to book</button>
-
-        <div class="glossary-spread">
-            <div class="glossary-wheel-shell" aria-label="Glossary selector">
-                <div class="glossary-selector-badge" aria-hidden="true">GL</div>
-                <button class="glossary-wheel-option" type="button" data-glossary-index="0">Saturation</button>
-                <button class="glossary-wheel-option" type="button" data-glossary-index="1">Secondary colors</button>
-                <button class="glossary-wheel-option" type="button" data-glossary-index="2">Shade or tone</button>
-                <button class="glossary-wheel-option" type="button" data-glossary-index="3">Tertiary colors</button>
-                <button class="glossary-wheel-option" type="button" data-glossary-index="4">Tint</button>
-                <button class="glossary-wheel-option" type="button" data-glossary-index="5">Value or lightness</button>
-                <button class="glossary-wheel-option" type="button" data-glossary-index="6">CMYK</button>
-                <button class="glossary-wheel-option" type="button" data-glossary-index="7">Hue</button>
-                <button class="glossary-wheel-option" type="button" data-glossary-index="8">PMS</button>
-                <button class="glossary-wheel-option" type="button" data-glossary-index="9">Primary colors</button>
-                <button class="glossary-wheel-option" type="button" data-glossary-index="10">Purity</button>
-                <button class="glossary-wheel-option" type="button" data-glossary-index="11">RGB</button>
-            </div>
-
-            <article class="glossary-detail" aria-live="polite">
-                <p class="glossary-kicker">Glossary</p>
-                <p class="glossary-number" id="glossary-number">01</p>
-                <h1 id="glossary-title">Saturation</h1>
-                <p class="glossary-intro" id="glossary-description">Saturation describes how intense or pure a color feels. A highly saturated color feels vivid, while a less saturated color feels muted or gray.</p>
-            </article>
-        </div>
-    </section>
-
-    <main class="page">
-        <div class="credits">
-            <p><b>The Designer's Dictionary of Color <br> <span class="credits-author">By Sean Adams</span></b></p>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Interactive color system</p>
+          <h1 id="hero-title">A living rainbow grid for digital color play.</h1>
+          <p class="hero-intro">
+            Rainbow Square Lab turns a familiar color grid into a moving field:
+            part palette study, part interface experiment, part tiny chromatic universe.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-action" href="#system">Explore the system</a>
+          </div>
         </div>
 
-        <div class="scene" id="scene">
-            <div class="rainbow-grid-wrap">
-                <div class="rainbow-grid-stage" id="rainbow-grid-stage">
-                <div class="rainbow-grid" id="rainbow-grid">
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-                <div class="rainbow-square"></div>
-
-                </div>
-                </div>
-            </div>
-
-            <aside class="toolbox">
-                <button class="tool-button" id="spawn-circle-btn" type="button" aria-label="Spawn circle" title="Spawn circle">
-                    <svg class="tool-icon tool-icon-spawn" viewBox="0 0 64 64" aria-hidden="true">
-                        <g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M8 24H22"></path>
-                            <path d="M4 32H20"></path>
-                            <path d="M10 40H22"></path>
-                            <circle cx="42" cy="32" r="14"></circle>
-                        </g>
-                    </svg>
-                </button>
-
-                <button class="tool-button" id="dark-mode-btn" type="button" aria-label="Enable dark mode" title="Enable dark mode">
-                    <svg class="tool-icon tool-icon-toggle tool-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M14.6 3.2C12.05 3.48 9.81 4.85 8.5 6.92C7.19 8.99 6.93 11.53 7.8 13.82C8.67 16.11 10.58 17.93 12.95 18.69C15.32 19.45 17.89 19.07 19.95 17.66C17.79 17.42 15.82 16.43 14.45 14.9C13.08 13.37 12.41 11.32 12.6 9.27C12.78 7.22 13.81 5.31 15.48 4C15.18 3.79 14.89 3.53 14.6 3.2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
-                    </svg>
-                    <svg class="tool-icon tool-icon-toggle tool-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
-                        <circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
-                        <path d="M12 2.75V5.1M12 18.9V21.25M21.25 12H18.9M5.1 12H2.75M18.54 5.46L16.88 7.12M7.12 16.88L5.46 18.54M18.54 18.54L16.88 16.88M7.12 7.12L5.46 5.46" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-                    </svg>
-                </button>
-
-                <button class="tool-button" id="gravity-btn" type="button" aria-label="Enable heavy gravity" title="Enable heavy gravity">
-                    <svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M12 4.5V16.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path>
-                        <path d="M8.5 13L12 16.5L15.5 13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
-                        <path d="M7 19.5H17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
-                    </svg>
-                </button>
-
-                <button class="tool-button is-active" id="jelly-btn" type="button" aria-label="Disable jelly motion" title="Disable jelly motion">
-                    <svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M7.5 8.5C7.5 7.4 8.4 6.5 9.5 6.5H14.5C15.6 6.5 16.5 7.4 16.5 8.5V13.7C16.5 16.4 14.3 18.5 11.7 18.5C9.6 18.5 7.5 17.1 7.5 14.3V8.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
-                        <path d="M8.8 11.1C9.8 11.9 10.8 11.9 11.8 11.1C12.8 10.3 13.8 10.3 14.8 11.1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
-                    </svg>
-                </button>
-
-                <button class="tool-button" id="reset-btn" type="button" aria-label="Reset scene" title="Reset scene">
-                    <svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M7.75 8.25V4.75M7.75 4.75H11.25M7.75 4.75L11 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
-                        <path d="M8.2 6.1C9.35 5.08 10.87 4.5 12.5 4.5C16.09 4.5 19 7.41 19 11C19 14.59 16.09 17.5 12.5 17.5C9.67 17.5 7.26 15.69 6.38 13.17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-                    </svg>
-                </button>
-            </aside>
-
-            <button class="back-button" id="back-button" type="button" aria-label="Go back to book cover">
-                Go back
-            </button>
+        <div class="visual-stage" id="motion" aria-label="Animated rainbow square orb">
+          <div class="orb-shadow" aria-hidden="true"></div>
+          <div class="orb-shell" id="orb-shell">
+            <div class="orb-grid" id="rainbow-orb"></div>
+          </div>
+          <div class="orb-caption">
+            <span>14 color memory</span>
+            <span>motion field 01</span>
+          </div>
         </div>
+      </section>
 
-    </main> 
+      <section class="support-panel" id="system" aria-label="Project concept">
+        <p>
+          Built from the colors and rhythm of the original rainbow square idea,
+          redesigned as an original web-native object with motion, depth, and interaction.
+        </p>
+        <div class="system-notes" id="palette">
+          <span>Grid logic</span>
+          <span>Particle motion</span>
+          <span>Palette memory</span>
+        </div>
+      </section>
+    </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
