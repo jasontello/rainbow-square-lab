@@ -1,5 +1,6 @@
 const orb = document.getElementById("rainbow-orb");
 const orbShell = document.getElementById("orb-shell");
+const modeCaption = document.getElementById("mode-caption");
 
 const ORB_SIZE = 31;
 const ORB_CENTER = (ORB_SIZE - 1) / 2;
@@ -23,6 +24,7 @@ const BASE_COLORS = [
 
 let animationFrame = null;
 let cells = [];
+let isSettled = false;
 
 function wrapIndex(index, length) {
     return ((index % length) + length) % length;
@@ -77,11 +79,14 @@ function buildOrb() {
             if (isInsideOrb) {
                 const edgeFade = Math.max(0.34, 1 - Math.max(0, distance - ORB_RADIUS * 0.74) * 0.12);
                 const latitude = Math.cos((y / (ORB_SIZE - 1)) * Math.PI);
-                const color = getStaticRainbowColor(x, y);
+                const dotLeft = 50 + (x - ORB_CENTER) * 3.15;
+                const dotTop = 50 + (y - ORB_CENTER) * 3.15;
 
-                cell.style.setProperty("--cell-color", color);
+                cell.style.setProperty("--cell-color", getStaticRainbowColor(x, y));
                 cell.style.setProperty("--cell-opacity", edgeFade.toFixed(3));
                 cell.style.setProperty("--cell-scale", "0.9");
+                cell.style.setProperty("--dot-left", `${dotLeft}%`);
+                cell.style.setProperty("--dot-top", `${dotTop}%`);
 
                 cells.push({
                     element: cell,
@@ -101,7 +106,8 @@ function buildOrb() {
 }
 
 function animateOrb(time = 0) {
-    if (!orb) {
+    if (!orb || isSettled) {
+        animationFrame = null;
         return;
     }
 
@@ -121,8 +127,21 @@ function animateOrb(time = 0) {
     animationFrame = window.requestAnimationFrame(animateOrb);
 }
 
+function startOrbAnimation() {
+    if (!animationFrame) {
+        animationFrame = window.requestAnimationFrame(animateOrb);
+    }
+}
+
+function stopOrbAnimation() {
+    if (animationFrame) {
+        window.cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+    }
+}
+
 function handlePointerMove(event) {
-    if (!orbShell) {
+    if (!orbShell || isSettled) {
         return;
     }
 
@@ -143,16 +162,50 @@ function resetTilt() {
     orbShell.style.setProperty("--tilt-y", "0deg");
 }
 
+function toggleSettled() {
+    if (!orbShell || !orb) {
+        return;
+    }
+
+    isSettled = !isSettled;
+    orbShell.classList.toggle("is-settled", isSettled);
+    orbShell.setAttribute(
+        "aria-label",
+        isSettled ? "Restart the animated rainbow field" : "Morph the rainbow field into a smooth color wheel"
+    );
+
+    if (modeCaption) {
+        modeCaption.textContent = isSettled ? "click to restart" : "click to morph";
+    }
+
+    if (isSettled) {
+        stopOrbAnimation();
+        resetTilt();
+        orb.style.setProperty("--orb-rotate", "0deg");
+        cells.forEach((cell) => {
+            cell.element.style.setProperty("--cell-opacity", "0.96");
+            cell.element.style.setProperty("--cell-scale", "1");
+        });
+    } else {
+        startOrbAnimation();
+    }
+}
+
 buildOrb();
-animateOrb();
+startOrbAnimation();
 
 if (orbShell) {
     orbShell.addEventListener("pointermove", handlePointerMove);
     orbShell.addEventListener("pointerleave", resetTilt);
+    orbShell.addEventListener("click", toggleSettled);
+    orbShell.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            toggleSettled();
+        }
+    });
 }
 
 window.addEventListener("pagehide", () => {
-    if (animationFrame) {
-        window.cancelAnimationFrame(animationFrame);
-    }
+    stopOrbAnimation();
 });

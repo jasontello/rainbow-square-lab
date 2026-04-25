@@ -15,46 +15,21 @@
           Rainbow Square Lab
         </a>
         <div class="nav-links" aria-label="Project sections">
-          <a href="#system">System</a>
           <a href="#motion">Motion</a>
-          <a href="#palette">Palette</a>
         </div>
       </nav>
 
-      <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-copy">
-          <p class="eyebrow">Interactive color system</p>
-          <h1 id="hero-title">A living rainbow grid for digital color play.</h1>
-          <p class="hero-intro">
-            Rainbow Square Lab turns a familiar color grid into a moving field:
-            part palette study, part interface experiment, part tiny chromatic universe.
-          </p>
-          <div class="hero-actions">
-            <a class="primary-action" href="#system">Explore the system</a>
-          </div>
-        </div>
-
+      <section class="hero" aria-label="Interactive rainbow color field">
         <div class="visual-stage" id="motion" aria-label="Animated rainbow square orb">
           <div class="orb-shadow" aria-hidden="true"></div>
-          <div class="orb-shell" id="orb-shell">
+          <div class="orb-shell" id="orb-shell" role="button" tabindex="0" aria-label="Morph the rainbow field into a smooth color wheel">
             <div class="orb-grid" id="rainbow-orb"></div>
+            <div class="smooth-wheel" aria-hidden="true"></div>
           </div>
           <div class="orb-caption">
-            <span>14 color memory</span>
-            <span>motion field 01</span>
+            <span>rainbow field</span>
+            <span id="mode-caption">click to morph</span>
           </div>
-        </div>
-      </section>
-
-      <section class="support-panel" id="system" aria-label="Project concept">
-        <p>
-          Built from the colors and rhythm of the original rainbow square idea,
-          redesigned as an original web-native object with motion, depth, and interaction.
-        </p>
-        <div class="system-notes" id="palette">
-          <span>Grid logic</span>
-          <span>Particle motion</span>
-          <span>Palette memory</span>
         </div>
       </section>
     </main>
