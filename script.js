@@ -1,6 +1,8 @@
 const orb = document.getElementById("rainbow-orb");
 const orbShell = document.getElementById("orb-shell");
-const modeCaption = document.getElementById("mode-caption");
+const toolSelector = document.querySelector(".tool-selector");
+const toolSelectorIcon = document.querySelector(".tool-selector img");
+const toolSelectorLine = document.querySelector(".tool-selector__line");
 
 const ORB_SIZE = 31;
 const ORB_CENTER = (ORB_SIZE - 1) / 2;
@@ -24,7 +26,6 @@ const BASE_COLORS = [
 
 let animationFrame = null;
 let cells = [];
-let isSettled = false;
 
 function wrapIndex(index, length) {
     return ((index % length) + length) % length;
@@ -106,7 +107,7 @@ function buildOrb() {
 }
 
 function animateOrb(time = 0) {
-    if (!orb || isSettled) {
+    if (!orb) {
         animationFrame = null;
         return;
     }
@@ -141,7 +142,7 @@ function stopOrbAnimation() {
 }
 
 function handlePointerMove(event) {
-    if (!orbShell || isSettled) {
+    if (!orbShell) {
         return;
     }
 
@@ -162,48 +163,62 @@ function resetTilt() {
     orbShell.style.setProperty("--tilt-y", "0deg");
 }
 
-function toggleSettled() {
-    if (!orbShell || !orb) {
+function startToolSelectorMotion() {
+    const shouldReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (!window.gsap || !toolSelector || shouldReduceMotion) {
         return;
     }
 
-    isSettled = !isSettled;
-    orbShell.classList.toggle("is-settled", isSettled);
-    orbShell.setAttribute(
-        "aria-label",
-        isSettled ? "Restart the animated rainbow field" : "Morph the rainbow field into a smooth color wheel"
-    );
+    const random = window.gsap.utils.random;
 
-    if (modeCaption) {
-        modeCaption.textContent = isSettled ? "click to restart" : "click to morph";
-    }
-
-    if (isSettled) {
-        stopOrbAnimation();
-        resetTilt();
-        orb.style.setProperty("--orb-rotate", "0deg");
-        cells.forEach((cell) => {
-            cell.element.style.setProperty("--cell-opacity", "0.96");
-            cell.element.style.setProperty("--cell-scale", "1");
+    function driftSelector() {
+        window.gsap.to(toolSelector, {
+            x: random(-8, 9),
+            y: random(-10, 8),
+            duration: random(2.4, 4.8),
+            ease: "sine.inOut",
+            onComplete: driftSelector
         });
-    } else {
-        startOrbAnimation();
     }
+
+    function driftIcon() {
+        if (!toolSelectorIcon) {
+            return;
+        }
+
+        window.gsap.to(toolSelectorIcon, {
+            rotation: random(-7, 7),
+            scale: random(0.96, 1.06),
+            duration: random(2.2, 4.2),
+            ease: "sine.inOut",
+            onComplete: driftIcon
+        });
+    }
+
+    if (toolSelectorLine) {
+        window.gsap.to(toolSelectorLine, {
+            opacity: 0.82,
+            backgroundPosition: "100% 50%",
+            "--line-scale": 1.08,
+            duration: 2.8,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut"
+        });
+    }
+
+    driftSelector();
+    driftIcon();
 }
 
 buildOrb();
 startOrbAnimation();
+startToolSelectorMotion();
 
 if (orbShell) {
     orbShell.addEventListener("pointermove", handlePointerMove);
     orbShell.addEventListener("pointerleave", resetTilt);
-    orbShell.addEventListener("click", toggleSettled);
-    orbShell.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            toggleSettled();
-        }
-    });
 }
 
 window.addEventListener("pagehide", () => {

@@ -121,6 +121,75 @@ button {
     animation: orb-enter 1s 0.14s ease both;
 }
 
+.tool-selector {
+    --line-length: clamp(5rem, 12vw, 8.5rem);
+    --line-angle: 28deg;
+    position: absolute;
+    top: 20%;
+    left: 26%;
+    z-index: 5;
+    display: grid;
+    place-items: center;
+    width: 3.15rem;
+    aspect-ratio: 1;
+    color: var(--ink);
+    transition:
+        color 0.18s ease,
+        opacity 0.18s ease;
+    will-change: transform;
+}
+
+.tool-selector::before {
+    position: absolute;
+    inset: -0.45rem;
+    border-radius: 50%;
+    content: "";
+}
+
+.tool-selector:hover,
+.tool-selector:focus-visible {
+    color: var(--ink);
+}
+
+.tool-selector:focus-visible {
+    outline: 2px solid rgba(24, 23, 19, 0.35);
+    outline-offset: 0.45rem;
+}
+
+.tool-selector img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+    filter: drop-shadow(0 0.75rem 1.4rem rgba(24, 23, 19, 0.16));
+    transform-origin: center;
+    will-change: transform;
+}
+
+.tool-selector__line {
+    --line-scale: 1;
+    position: absolute;
+    top: 50%;
+    left: calc(100% - 0.1rem);
+    width: var(--line-length);
+    height: 1px;
+    background:
+        linear-gradient(90deg, transparent, rgba(24, 23, 19, 0.42), transparent);
+    background-size: 220% 100%;
+    transform: rotate(var(--line-angle)) scaleX(var(--line-scale));
+    transform-origin: left center;
+    pointer-events: none;
+    transition:
+        background-color 0.18s ease,
+        width 0.18s ease;
+    will-change: opacity, background-position, transform;
+}
+
+.tool-selector:hover .tool-selector__line,
+.tool-selector:focus-visible .tool-selector__line {
+    width: calc(var(--line-length) + 0.75rem);
+}
+
 .orb-shell {
     --tilt-x: 0deg;
     --tilt-y: 0deg;
@@ -130,7 +199,6 @@ button {
     display: grid;
     place-items: center;
     border-radius: 50%;
-    cursor: pointer;
     outline: none;
     transform:
         perspective(900px)
@@ -145,12 +213,6 @@ button {
 
 .orb-shell:focus-visible {
     box-shadow: 0 0 0 3px rgba(24, 23, 19, 0.18);
-}
-
-.orb-shell.is-settled {
-    width: min(76vw, 44rem);
-    aspect-ratio: 1;
-    border-radius: 50%;
 }
 
 .orb-shell::before,
@@ -173,11 +235,6 @@ button {
     transform: rotate(-21deg) scaleY(0.64);
 }
 
-.orb-shell.is-settled::before,
-.orb-shell.is-settled::after {
-    opacity: 0;
-}
-
 .orb-shadow {
     position: absolute;
     bottom: 9%;
@@ -191,12 +248,6 @@ button {
         opacity 0.45s ease,
         transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
         width 0.65s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.visual-stage:has(.orb-shell.is-settled) .orb-shadow {
-    width: min(50vw, 32rem);
-    opacity: 0.1;
-    transform: translateY(2.8rem) scaleY(0.58);
 }
 
 .orb-grid {
@@ -213,35 +264,6 @@ button {
         border-radius 0.65s cubic-bezier(0.22, 1, 0.36, 1),
         filter 0.45s ease,
         width 0.65s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.orb-shell.is-settled .orb-grid {
-    width: 78%;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    filter: drop-shadow(0 1.4rem 3.8rem rgba(2, 11, 28, 0.08));
-}
-
-.smooth-wheel {
-    position: absolute;
-    z-index: 1;
-    width: 78%;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    opacity: 0;
-    background:
-        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.96) 0 8%, rgba(255, 255, 255, 0.58) 19%, rgba(255, 255, 255, 0.08) 42%, transparent 64%),
-        conic-gradient(from 18deg, #ff2a16, #ff3fd2 14%, #6a35ff 30%, #0078e8 43%, #20ebdb 55%, #22ee35 67%, #ecff12 79%, #ff9d14 91%, #ff2a16);
-    filter: saturate(1.12) drop-shadow(0 1.4rem 3.8rem rgba(2, 11, 28, 0.1));
-    transform: scale(0.94);
-    transition:
-        opacity 1.15s ease,
-        transform 1.15s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.orb-shell.is-settled .smooth-wheel {
-    opacity: 1;
-    transform: scale(1);
 }
 
 .orb-cell {
@@ -280,13 +302,6 @@ button {
         translate(-50%, -50%)
         scale(calc(var(--cell-scale) * 1.25));
     opacity: 1;
-}
-
-.orb-shell.is-settled .orb-cell {
-    opacity: 0.16;
-    transform:
-        translate(-50%, -50%)
-        scale(1.18);
 }
 
 .orb-caption {
@@ -333,6 +348,13 @@ button {
 
     .visual-stage {
         min-height: 24rem;
+    }
+
+    .tool-selector {
+        top: 16%;
+        left: 12%;
+        width: 2.65rem;
+        --line-length: clamp(3.5rem, 15vw, 5.25rem);
     }
 
     .orb-shell {
