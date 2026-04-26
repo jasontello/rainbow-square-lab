@@ -79,13 +79,38 @@ button {
     text-transform: uppercase;
 }
 
-.brand-mark span {
-    width: 1.1rem;
-    aspect-ratio: 1;
+.brand-logo {
+    position: relative;
+    width: 1.55rem;
+    height: 1.35rem;
     display: inline-block;
-    background:
-        linear-gradient(90deg, #36abe1 0 25%, #d4148e 25% 50%, #ffe500 50% 75%, #93c01f 75%);
-    box-shadow: 0 0 0 1px rgba(24, 23, 19, 0.18);
+    flex: 0 0 auto;
+}
+
+.brand-logo__tile {
+    position: absolute;
+    width: 0.82rem;
+    height: 0.82rem;
+    border: 0px solid rgba(24, 23, 19, 0.08);
+    mix-blend-mode: multiply;
+}
+
+.brand-logo__tile--cyan {
+    left: 0;
+    top: 0.27rem;
+    background: rgba(0, 174, 239, 0.78);
+}
+
+.brand-logo__tile--yellow {
+    left: 0.52rem;
+    top: 0;
+    background: rgba(255, 222, 0, 0.82);
+}
+
+.brand-logo__tile--magenta {
+    left: 0.32rem;
+    top: 0.52rem;
+    background: rgba(236, 0, 140, 0.76);
 }
 
 .nav-links {

@@ -217,9 +217,48 @@ function startToolSelectorMotion() {
     }
 
     const random = window.gsap.utils.random;
+    const activeToolAnimations = new Set();
+    let toolMotionScale = 1;
+
+    function setToolMotionScale(scale) {
+        toolMotionScale = scale;
+        activeToolAnimations.forEach((animation) => {
+            animation.timeScale(toolMotionScale);
+        });
+    }
+
+    function toolTo(target, vars) {
+        const originalOnComplete = vars.onComplete;
+        let tween;
+
+        tween = window.gsap.to(target, {
+            ...vars,
+            onComplete: () => {
+                activeToolAnimations.delete(tween);
+                originalOnComplete?.();
+            }
+        });
+        tween.timeScale(toolMotionScale);
+        activeToolAnimations.add(tween);
+
+        return tween;
+    }
+
+    function toolDelay(delay, callback) {
+        let delayedCall;
+
+        delayedCall = window.gsap.delayedCall(delay, () => {
+            activeToolAnimations.delete(delayedCall);
+            callback();
+        });
+        delayedCall.timeScale(toolMotionScale);
+        activeToolAnimations.add(delayedCall);
+
+        return delayedCall;
+    }
 
     function driftSelector() {
-        window.gsap.to(toolSelector, {
+        toolTo(toolSelector, {
             x: random(-52, 34),
             y: random(-42, 28),
             duration: random(3.2, 6.2),
@@ -234,13 +273,30 @@ function startToolSelectorMotion() {
             return;
         }
 
-        window.gsap.to(toolSelectorIcon, {
+        toolTo(toolSelectorIcon, {
             rotation: random(-7, 7),
-            scale: random(0.96, 1.06),
             duration: random(2.2, 4.2),
             ease: "sine.inOut",
             onUpdate: updateToolConnector,
             onComplete: driftIcon
+        });
+    }
+
+    function pulseIconSize() {
+        if (!toolSelectorIcon) {
+            return;
+        }
+
+        toolTo(toolSelectorIcon, {
+            scale: random(1.06, 1.14),
+            duration: random(0.34, 0.72),
+            repeat: 1,
+            yoyo: true,
+            ease: "sine.inOut",
+            onUpdate: updateToolConnector,
+            onComplete: () => {
+                toolDelay(random(1.4, 4.4), pulseIconSize);
+            }
         });
     }
 
@@ -249,7 +305,7 @@ function startToolSelectorMotion() {
             return;
         }
 
-        window.gsap.to(toolSelectorGlow, {
+        toolTo(toolSelectorGlow, {
             "--selector-glow-opacity": random(0.12, 0.3),
             duration: random(1.1, 2.4),
             repeat: 1,
@@ -257,13 +313,29 @@ function startToolSelectorMotion() {
             repeatDelay: random(0.05, 0.28),
             ease: "sine.inOut",
             onComplete: () => {
-                window.gsap.delayedCall(random(0.35, 1.8), pulseGlow);
+                toolDelay(random(0.35, 1.8), pulseGlow);
+            }
+        });
+    }
+
+    function spinIcon() {
+        if (!toolSelectorIcon) {
+            return;
+        }
+
+        toolTo(toolSelectorIcon, {
+            rotation: `+=${random([-360, 360, 540, -540])}`,
+            duration: random(0.85, 1.55),
+            ease: "power2.inOut",
+            onUpdate: updateToolConnector,
+            onComplete: () => {
+                toolDelay(random(2.2, 6), spinIcon);
             }
         });
     }
 
     if (toolConnector) {
-        window.gsap.to(toolConnector, {
+        toolTo(toolConnector, {
             opacity: 0.82,
             backgroundPosition: "100% 50%",
             duration: 3.4,
@@ -275,8 +347,15 @@ function startToolSelectorMotion() {
 
     driftSelector();
     driftIcon();
+    toolDelay(random(0.8, 2.6), pulseIconSize);
     pulseGlow();
+    toolDelay(random(1.2, 3.8), spinIcon);
     updateToolConnector();
+
+    toolSelector.addEventListener("pointerenter", () => setToolMotionScale(0.16));
+    toolSelector.addEventListener("pointerleave", () => setToolMotionScale(1));
+    toolSelector.addEventListener("focus", () => setToolMotionScale(0.16));
+    toolSelector.addEventListener("blur", () => setToolMotionScale(1));
 }
 
 buildOrb();
