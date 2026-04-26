@@ -21,13 +21,13 @@
 
       <section class="hero" aria-label="Interactive rainbow color field">
         <div class="visual-stage" id="motion" aria-label="Animated rainbow square orb">
+          <span class="tool-connector" aria-hidden="true"></span>
           <a class="tool-selector tool-selector--color" href="#color-tool" aria-label="Open color tool">
-            <span class="tool-selector__line" aria-hidden="true"></span>
             <img src="assets/icons8-color-50.png" alt="">
           </a>
           <div class="orb-shadow" aria-hidden="true"></div>
           <div class="orb-shell" id="orb-shell">
-            <div class="orb-grid" id="rainbow-orb"></div>
+            <canvas class="orb-grid" id="rainbow-orb" aria-hidden="true"></canvas>
           </div>
           <div class="orb-caption">
             <span>rainbow field</span>

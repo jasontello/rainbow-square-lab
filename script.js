@@ -1,8 +1,11 @@
-const orb = document.getElementById("rainbow-orb");
+const orbCanvas = document.getElementById("rainbow-orb");
+const orbContext = orbCanvas?.getContext("2d");
 const orbShell = document.getElementById("orb-shell");
+const visualStage = document.getElementById("motion");
 const toolSelector = document.querySelector(".tool-selector");
 const toolSelectorIcon = document.querySelector(".tool-selector img");
-const toolSelectorLine = document.querySelector(".tool-selector__line");
+const toolConnector = document.querySelector(".tool-connector");
+const toolSelectorGlow = toolSelector;
 
 const ORB_SIZE = 31;
 const ORB_CENTER = (ORB_SIZE - 1) / 2;
@@ -26,6 +29,8 @@ const BASE_COLORS = [
 
 let animationFrame = null;
 let cells = [];
+let orbCanvasSize = 0;
+let orbDevicePixelRatio = 1;
 
 function wrapIndex(index, length) {
     return ((index % length) + length) % length;
@@ -61,21 +66,33 @@ function getStaticRainbowColor(x, y) {
     return getRainbowColor(x, y, 0);
 }
 
-function buildOrb() {
-    if (!orb) {
+function resizeOrbCanvas() {
+    if (!orbCanvas || !orbContext) {
         return;
     }
 
-    const fragment = document.createDocumentFragment();
+    const rect = orbCanvas.getBoundingClientRect();
+    const nextSize = Math.max(1, rect.width);
+    const nextPixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+
+    if (nextSize === orbCanvasSize && nextPixelRatio === orbDevicePixelRatio) {
+        return;
+    }
+
+    orbCanvasSize = nextSize;
+    orbDevicePixelRatio = nextPixelRatio;
+    orbCanvas.width = Math.round(nextSize * nextPixelRatio);
+    orbCanvas.height = Math.round(nextSize * nextPixelRatio);
+    orbContext.setTransform(nextPixelRatio, 0, 0, nextPixelRatio, 0, 0);
+}
+
+function buildOrb() {
     cells = [];
 
     for (let y = 0; y < ORB_SIZE; y += 1) {
         for (let x = 0; x < ORB_SIZE; x += 1) {
-            const cell = document.createElement("span");
             const distance = Math.hypot(x - ORB_CENTER, y - ORB_CENTER);
             const isInsideOrb = distance <= ORB_RADIUS;
-
-            cell.className = isInsideOrb ? "orb-cell" : "orb-cell is-empty";
 
             if (isInsideOrb) {
                 const edgeFade = Math.max(0.34, 1 - Math.max(0, distance - ORB_RADIUS * 0.74) * 0.12);
@@ -83,36 +100,29 @@ function buildOrb() {
                 const dotLeft = 50 + (x - ORB_CENTER) * 3.15;
                 const dotTop = 50 + (y - ORB_CENTER) * 3.15;
 
-                cell.style.setProperty("--cell-color", getStaticRainbowColor(x, y));
-                cell.style.setProperty("--cell-opacity", edgeFade.toFixed(3));
-                cell.style.setProperty("--cell-scale", "0.9");
-                cell.style.setProperty("--dot-left", `${dotLeft}%`);
-                cell.style.setProperty("--dot-top", `${dotTop}%`);
-
                 cells.push({
-                    element: cell,
                     x,
                     y,
                     distance,
                     edgeFade,
-                    latitude
+                    latitude,
+                    dotLeft: dotLeft / 100,
+                    dotTop: dotTop / 100,
+                    color: getStaticRainbowColor(x, y)
                 });
             }
-
-            fragment.appendChild(cell);
         }
     }
-
-    orb.appendChild(fragment);
 }
 
 function animateOrb(time = 0) {
-    if (!orb) {
+    if (!orbCanvas || !orbContext) {
         animationFrame = null;
         return;
     }
 
-    orb.style.setProperty("--orb-rotate", `${Math.sin(time * 0.00025) * 5}deg`);
+    orbCanvas.style.setProperty("--orb-rotate", `${Math.sin(time * 0.00025) * 5}deg`);
+    orbContext.clearRect(0, 0, orbCanvasSize, orbCanvasSize);
 
     cells.forEach((cell) => {
         const longitudeWave = Math.sin(time * 0.0016 + cell.x * 0.6);
@@ -120,9 +130,21 @@ function animateOrb(time = 0) {
         const sparkle = Math.sin(time * 0.0022 + cell.distance * 0.9);
         const opacity = Math.max(0.18, Math.min(1, cell.edgeFade * (0.56 + cloudBand * 0.26 + sparkle * 0.12)));
         const scale = 0.72 + Math.max(0, longitudeWave) * 0.42 + Math.abs(cell.latitude) * 0.1;
+        const cellSize = orbCanvasSize * 0.0245 * scale;
+        const cellCenterX = orbCanvasSize * cell.dotLeft;
+        const cellCenterY = orbCanvasSize * cell.dotTop;
 
-        cell.element.style.setProperty("--cell-opacity", opacity.toFixed(3));
-        cell.element.style.setProperty("--cell-scale", scale.toFixed(3));
+        orbContext.save();
+        orbContext.translate(cellCenterX, cellCenterY);
+        orbContext.rotate(Math.PI / 4);
+        orbContext.globalAlpha = opacity;
+        orbContext.fillStyle = cell.color;
+        orbContext.fillRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize);
+        orbContext.globalAlpha = opacity * 0.32;
+        orbContext.strokeStyle = "rgba(24, 23, 19, 0.28)";
+        orbContext.lineWidth = 1;
+        orbContext.strokeRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize);
+        orbContext.restore();
     });
 
     animationFrame = window.requestAnimationFrame(animateOrb);
@@ -163,10 +185,34 @@ function resetTilt() {
     orbShell.style.setProperty("--tilt-y", "0deg");
 }
 
+function updateToolConnector() {
+    if (!visualStage || !orbShell || !toolSelector || !toolConnector) {
+        return;
+    }
+
+    const stageRect = visualStage.getBoundingClientRect();
+    const orbRect = orbShell.getBoundingClientRect();
+    const selectorRect = toolSelector.getBoundingClientRect();
+    const startX = orbRect.left + orbRect.width * 0.29 - stageRect.left;
+    const startY = orbRect.top + orbRect.height * 0.32 - stageRect.top;
+    const endX = selectorRect.left + selectorRect.width * 0.72 - stageRect.left;
+    const endY = selectorRect.top + selectorRect.height * 0.72 - stageRect.top;
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
+    const length = Math.hypot(deltaX, deltaY);
+    const angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+
+    toolConnector.style.setProperty("--connector-left", `${startX}px`);
+    toolConnector.style.setProperty("--connector-top", `${startY}px`);
+    toolConnector.style.setProperty("--connector-length", `${length}px`);
+    toolConnector.style.setProperty("--connector-angle", `${angle}deg`);
+}
+
 function startToolSelectorMotion() {
     const shouldReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     if (!window.gsap || !toolSelector || shouldReduceMotion) {
+        updateToolConnector();
         return;
     }
 
@@ -174,10 +220,11 @@ function startToolSelectorMotion() {
 
     function driftSelector() {
         window.gsap.to(toolSelector, {
-            x: random(-8, 9),
-            y: random(-10, 8),
-            duration: random(2.4, 4.8),
+            x: random(-52, 34),
+            y: random(-42, 28),
+            duration: random(3.2, 6.2),
             ease: "sine.inOut",
+            onUpdate: updateToolConnector,
             onComplete: driftSelector
         });
     }
@@ -192,16 +239,34 @@ function startToolSelectorMotion() {
             scale: random(0.96, 1.06),
             duration: random(2.2, 4.2),
             ease: "sine.inOut",
+            onUpdate: updateToolConnector,
             onComplete: driftIcon
         });
     }
 
-    if (toolSelectorLine) {
-        window.gsap.to(toolSelectorLine, {
+    function pulseGlow() {
+        if (!toolSelectorGlow) {
+            return;
+        }
+
+        window.gsap.to(toolSelectorGlow, {
+            "--selector-glow-opacity": random(0.12, 0.3),
+            duration: random(1.1, 2.4),
+            repeat: 1,
+            yoyo: true,
+            repeatDelay: random(0.05, 0.28),
+            ease: "sine.inOut",
+            onComplete: () => {
+                window.gsap.delayedCall(random(0.35, 1.8), pulseGlow);
+            }
+        });
+    }
+
+    if (toolConnector) {
+        window.gsap.to(toolConnector, {
             opacity: 0.82,
             backgroundPosition: "100% 50%",
-            "--line-scale": 1.08,
-            duration: 2.8,
+            duration: 3.4,
             repeat: -1,
             yoyo: true,
             ease: "sine.inOut"
@@ -210,9 +275,12 @@ function startToolSelectorMotion() {
 
     driftSelector();
     driftIcon();
+    pulseGlow();
+    updateToolConnector();
 }
 
 buildOrb();
+resizeOrbCanvas();
 startOrbAnimation();
 startToolSelectorMotion();
 
@@ -223,4 +291,9 @@ if (orbShell) {
 
 window.addEventListener("pagehide", () => {
     stopOrbAnimation();
+});
+
+window.addEventListener("resize", () => {
+    resizeOrbCanvas();
+    updateToolConnector();
 });
