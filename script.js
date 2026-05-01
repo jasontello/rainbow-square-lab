@@ -597,6 +597,10 @@ function startToolSelectorMotion() {
             return;
         }
 
+        if (icon.closest(".tool-selector--locked")) {
+            return;
+        }
+
         toolTo(icon, {
             scale: random(1.06, 1.14),
             duration: random(0.34, 0.72),
@@ -607,6 +611,21 @@ function startToolSelectorMotion() {
             onComplete: () => {
                 toolDelay(random(1.4, 4.4), () => pulseIconSize(icon));
             }
+        });
+    }
+
+    function setLockedIconScale(selector, scale) {
+        const icon = selector.querySelector("img");
+
+        if (!icon || !selector.classList.contains("tool-selector--locked")) {
+            return;
+        }
+
+        window.gsap.to(icon, {
+            scale,
+            duration: 0.12,
+            ease: scale > 1 ? "power2.out" : "power2.inOut",
+            overwrite: "auto"
         });
     }
 
@@ -642,10 +661,22 @@ function startToolSelectorMotion() {
     toolSelectors.forEach((selector) => {
         driftSelector(selector);
         pulseGlow(selector);
-        selector.addEventListener("pointerenter", () => setToolMotionScale(0.72));
-        selector.addEventListener("pointerleave", () => setToolMotionScale(1));
-        selector.addEventListener("focus", () => setToolMotionScale(0.72));
-        selector.addEventListener("blur", () => setToolMotionScale(1));
+        selector.addEventListener("pointerenter", () => {
+            setToolMotionScale(0.72);
+            setLockedIconScale(selector, 1.35);
+        });
+        selector.addEventListener("pointerleave", () => {
+            setToolMotionScale(1);
+            setLockedIconScale(selector, 1);
+        });
+        selector.addEventListener("focus", () => {
+            setToolMotionScale(0.72);
+            setLockedIconScale(selector, 1.35);
+        });
+        selector.addEventListener("blur", () => {
+            setToolMotionScale(1);
+            setLockedIconScale(selector, 1);
+        });
     });
 
     toolSelectorIcons.forEach((icon) => {

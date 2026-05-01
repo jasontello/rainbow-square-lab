@@ -609,7 +609,7 @@ button {
 .tool-selector--locked:hover img,
 .tool-selector--locked:focus-visible img {
     opacity: 1;
-    transform: scale(1.28);
+    transform: scale(1.35);
 }
 
 .orb-shell {
