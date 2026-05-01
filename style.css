@@ -146,6 +146,337 @@ button {
     animation: orb-enter 1s 0.14s ease both;
 }
 
+.tool-panel {
+    position: absolute;
+    z-index: 3;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px);
+    transition:
+        opacity 0.38s ease,
+        transform 0.38s ease;
+}
+
+.tool-panel--left {
+    left: 0;
+    top: 50%;
+    width: min(24rem, 28vw);
+    transform: translateY(calc(-50% + 12px));
+}
+
+.tool-panel--right {
+    right: 0;
+    top: 50%;
+    width: min(22rem, 26vw);
+    display: grid;
+    gap: 1.25rem;
+    color: var(--ink);
+    text-align: left;
+    transform: translateY(calc(-50% + 12px));
+}
+
+.tool-view-active .tool-panel {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.tool-view-active .tool-panel--left,
+.tool-view-active .tool-panel--right {
+    transform: translateY(-50%);
+}
+
+.tool-back-button {
+    position: absolute;
+    left: 0;
+    bottom: clamp(0.8rem, 2vw, 1.5rem);
+    z-index: 6;
+    border: 1px solid rgba(24, 23, 19, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.64);
+    color: var(--ink);
+    cursor: pointer;
+    opacity: 0;
+    padding: 0.62rem 0.82rem;
+    pointer-events: none;
+    transform: translateY(8px);
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition:
+        background-color 0.18s ease,
+        opacity 0.32s ease,
+        transform 0.32s ease;
+}
+
+.tool-back-button:hover,
+.tool-back-button:focus-visible {
+    background: white;
+    transform: translateY(0);
+}
+
+.tool-view-active .tool-back-button {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.tool-eyebrow {
+    margin: 0 0 0.9rem;
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.tool-panel h1 {
+    max-width: 10ch;
+    margin: 0 0 1.25rem;
+    font-size: clamp(2.2rem, 4.6vw, 4.8rem);
+    font-weight: 900;
+    line-height: 0.9;
+}
+
+.tool-copy {
+    display: grid;
+    gap: 0.78rem;
+    color: rgba(24, 23, 19, 0.7);
+    font-size: clamp(0.82rem, 0.95vw, 0.98rem);
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.tool-copy p,
+.tool-copy ul {
+    margin: 0;
+}
+
+.tool-copy ul {
+    display: grid;
+    gap: 0.35rem;
+    padding-left: 1.05rem;
+}
+
+.color-controls {
+    --selected-color: #7390b0;
+    align-content: start;
+    max-height: min(82vh, 44rem);
+    overflow: auto;
+    padding: clamp(0.5rem, 1vw, 0.85rem);
+}
+
+.color-controls__title {
+    margin: 0 0 0.2rem;
+    font-size: clamp(1.55rem, 2.2vw, 2.15rem);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.color-control {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.color-control__label {
+    margin: 0;
+    font-size: clamp(0.9rem, 1.15vw, 1.4rem);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+}
+
+.color-swatch {
+    min-height: clamp(4.6rem, 9vw, 7.4rem);
+    border: 2px solid rgba(24, 23, 19, 0.16);
+    border-radius: 0.45rem;
+    background: var(--selected-color);
+    box-shadow:
+        inset 0 0 0 4px rgba(255, 255, 255, 0.78),
+        0 0.5rem 1.6rem rgba(24, 23, 19, 0.06);
+    transition: background-color 0.24s ease;
+}
+
+.color-value,
+.color-channel {
+    margin: 0;
+    border: 1px solid rgba(24, 23, 19, 0.22);
+    border-radius: 0.32rem;
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.color-value {
+    min-height: 3rem;
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    font-size: clamp(1.05rem, 1.35vw, 1.55rem);
+    font-weight: 500;
+}
+
+.color-value--hex.is-empty {
+    color: var(--muted);
+    font-size: clamp(0.75rem, 0.85vw, 0.95rem);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.color-channel-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.35rem;
+}
+
+.color-channel {
+    min-height: 2.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.24rem;
+    padding: 0 0.35rem;
+    font-size: clamp(0.82rem, 1vw, 1.2rem);
+    font-weight: 500;
+}
+
+.color-channel span:first-child {
+    font-weight: 800;
+}
+
+.channel-red {
+    color: #f00606;
+}
+
+.channel-green {
+    color: #008f1d;
+}
+
+.channel-blue {
+    color: #001bff;
+}
+
+.channel-cyan {
+    color: #00d8e5;
+}
+
+.channel-magenta {
+    color: #ff00f5;
+}
+
+.channel-yellow {
+    color: #f2dd00;
+}
+
+.color-info {
+    margin-top: 1.6rem;
+}
+
+.color-info h3 {
+    margin: 0 0 1.1rem;
+    border-bottom: 1px solid rgba(24, 23, 19, 0.24);
+    padding-bottom: 0.8rem;
+    font-size: clamp(1.05rem, 1.28vw, 1.45rem);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+}
+
+.color-info h3::after {
+    content: "";
+    display: block;
+    width: 2.2rem;
+    height: 1px;
+    margin-top: 0.8rem;
+    background: var(--ink);
+}
+
+.color-info p {
+    margin: 0;
+    color: rgba(24, 23, 19, 0.62);
+    font-size: clamp(0.85rem, 0.98vw, 1.1rem);
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.tool-intro {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: grid;
+    place-items: center;
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.68);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.36s ease;
+}
+
+.tool-intro__content {
+    width: min(30rem, 100%);
+    border: 1px solid rgba(24, 23, 19, 0.12);
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 2rem 5rem rgba(24, 23, 19, 0.12);
+    padding: clamp(1.4rem, 3vw, 2.4rem);
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+    transition:
+        opacity 0.36s ease,
+        transform 0.36s ease;
+}
+
+.tool-intro__content h2 {
+    margin: 0;
+    font-size: clamp(2.4rem, 6vw, 5.4rem);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 0.92;
+}
+
+.tool-intro__content p:not(.tool-eyebrow) {
+    max-width: 24rem;
+    margin: 1.1rem 0 0;
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.tool-intro__button {
+    margin-top: 1.45rem;
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+    background: var(--ink);
+    color: white;
+    cursor: pointer;
+    padding: 0.8rem 1rem;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition:
+        background-color 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease;
+}
+
+.tool-intro__button:hover,
+.tool-intro__button:focus-visible {
+    background: transparent;
+    color: var(--ink);
+    transform: translateY(-2px);
+}
+
+.tool-intro-visible .tool-intro {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.tool-intro-visible .tool-intro__content {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
 .tool-selector {
     --selector-glow-opacity: 0;
     position: absolute;
@@ -192,8 +523,8 @@ button {
     opacity: var(--selector-glow-opacity);
     transform: scale(0.72);
     transition:
-        opacity 0.28s ease,
-        transform 0.28s ease;
+        opacity 0.48s ease,
+        transform 0.48s ease;
 }
 
 .tool-selector:hover,
@@ -205,6 +536,15 @@ button {
 .tool-selector:focus-visible::before {
     --selector-glow-opacity: 0.85;
     transform: scale(1);
+    transition-duration: 1.15s;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tool-view-active .tool-selector,
+.tool-view-active .tool-connector {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
 }
 
 .tool-selector:focus-visible {
@@ -267,6 +607,11 @@ button {
     transform: rotate(-21deg) scaleY(0.64);
 }
 
+.tool-view-active .orb-shell::before,
+.tool-view-active .orb-shell::after {
+    opacity: 0;
+}
+
 .orb-shadow {
     position: absolute;
     bottom: 9%;
@@ -296,7 +641,137 @@ button {
         aspect-ratio 0.65s cubic-bezier(0.22, 1, 0.36, 1),
         border-radius 0.65s cubic-bezier(0.22, 1, 0.36, 1),
         filter 0.45s ease,
+        opacity 0.5s ease,
+        transform 0.5s ease,
         width 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.color-wheel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 4;
+    width: 78%;
+    height: 78%;
+    aspect-ratio: 1;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    cursor: crosshair;
+    opacity: 0;
+    pointer-events: none;
+    touch-action: none;
+    user-select: none;
+    transform: translate(-50%, -50%) scale(0.985);
+    transition:
+        opacity 0.5s ease,
+        transform 0.5s ease,
+        box-shadow 0.24s ease;
+}
+
+.color-wheel:focus {
+    outline: none;
+}
+
+.color-wheel-surface {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 3;
+    width: 78%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: 0 2rem 5rem rgba(24, 23, 19, 0.12);
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0.985);
+    transition:
+        opacity 0.5s ease,
+        transform 0.5s ease;
+}
+
+.color-wheel-surface::before,
+.color-wheel-surface::after {
+    content: "";
+    position: absolute;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.color-wheel-surface::before {
+    inset: 2px;
+    background:
+        radial-gradient(circle, rgba(255, 255, 255, 1) 0 4%, rgba(255, 255, 255, 0.9) 10%, rgba(255, 255, 255, 0.05) 56%, transparent 72%),
+        conic-gradient(from 0deg, #ff2a16, #ff9d14, #ffe500, #22ee35, #20ebdb, #0078e8, #6a35ff, #ff3fd2, #ff2a16);
+}
+
+.color-wheel-surface::after {
+    inset: 0;
+    border: 1px solid rgba(24, 23, 19, 0.16);
+}
+
+.color-wheel-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 5;
+    width: 0.78rem;
+    aspect-ratio: 1;
+    border: 2px solid rgba(255, 255, 255, 0.78);
+    border-radius: 50%;
+    background: rgba(24, 23, 19, 0.72);
+    box-shadow: 0 0.35rem 1rem rgba(24, 23, 19, 0.16);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0.8);
+    transition:
+        opacity 0.5s ease,
+        transform 0.5s ease;
+}
+
+.color-wheel-marker {
+    --marker-x: 50%;
+    --marker-y: 50%;
+    position: absolute;
+    top: var(--marker-y);
+    left: var(--marker-x);
+    z-index: 6;
+    width: 1.35rem;
+    aspect-ratio: 1;
+    border: 4px solid var(--ink);
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: 0 0.45rem 1.1rem rgba(24, 23, 19, 0.2);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0.72);
+    transition:
+        opacity 0.22s ease,
+        transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tool-view-active .orb-grid {
+    opacity: 0;
+    pointer-events: none;
+    transform: rotate(var(--orb-rotate, 0deg)) scale(0.985);
+}
+
+.tool-view-active .color-wheel,
+.tool-view-active .color-wheel-surface,
+.tool-view-active .color-wheel-center {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.tool-view-active .color-wheel {
+    pointer-events: auto;
+}
+
+.tool-view-active .color-wheel-marker.is-visible {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
 }
 
 .orb-caption {
@@ -343,6 +818,46 @@ button {
 
     .visual-stage {
         min-height: 24rem;
+    }
+
+    .tool-panel {
+        position: static;
+        width: min(100%, 34rem);
+        justify-self: stretch;
+        order: 2;
+        transform: translateY(12px);
+    }
+
+    .tool-panel--left {
+        margin-top: 1.5rem;
+    }
+
+    .tool-panel--right {
+        margin-top: 1rem;
+        justify-self: center;
+        width: min(100%, 16rem);
+    }
+
+    .tool-view-active .visual-stage {
+        align-content: center;
+        grid-template-rows: auto auto auto;
+        padding-block: 1rem 3rem;
+    }
+
+    .tool-view-active .tool-panel,
+    .tool-view-active .tool-panel--left,
+    .tool-view-active .tool-panel--right {
+        transform: translateY(0);
+    }
+
+    .tool-back-button {
+        left: 0;
+        bottom: 0;
+    }
+
+    .tool-panel h1 {
+        max-width: none;
+        font-size: clamp(2rem, 12vw, 3.8rem);
     }
 
     .tool-selector {

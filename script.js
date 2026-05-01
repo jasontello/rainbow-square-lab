@@ -1,11 +1,26 @@
 const orbCanvas = document.getElementById("rainbow-orb");
 const orbContext = orbCanvas?.getContext("2d");
+const colorWheel = document.getElementById("color-wheel");
 const orbShell = document.getElementById("orb-shell");
 const visualStage = document.getElementById("motion");
 const toolSelector = document.querySelector(".tool-selector");
 const toolSelectorIcon = document.querySelector(".tool-selector img");
 const toolConnector = document.querySelector(".tool-connector");
 const toolSelectorGlow = toolSelector;
+const toolIntro = document.getElementById("tool-intro");
+const startExploringButton = document.getElementById("start-exploring-btn");
+const toolBackButton = document.getElementById("tool-back-btn");
+const selectedColorSphere = document.getElementById("selected-color-sphere");
+const selectedColorLabel = document.getElementById("selected-color-label");
+const selectedRed = document.getElementById("selected-r");
+const selectedGreen = document.getElementById("selected-g");
+const selectedBlue = document.getElementById("selected-b");
+const selectedAlpha = document.getElementById("selected-a");
+const selectedCyan = document.getElementById("selected-c");
+const selectedMagenta = document.getElementById("selected-m");
+const selectedYellow = document.getElementById("selected-y");
+const selectedBlack = document.getElementById("selected-k");
+const colorWheelMarker = document.getElementById("color-wheel-marker");
 
 const ORB_SIZE = 31;
 const ORB_CENTER = (ORB_SIZE - 1) / 2;
@@ -31,6 +46,10 @@ let animationFrame = null;
 let cells = [];
 let orbCanvasSize = 0;
 let orbDevicePixelRatio = 1;
+let selectedColor = null;
+let isDraggingColorWheel = false;
+let markerHideTimeout = null;
+let hasSeenToolIntro = false;
 
 function wrapIndex(index, length) {
     return ((index % length) + length) % length;
@@ -44,6 +63,107 @@ function mixColor(colorA, colorB, amount) {
     });
 
     return `rgb(${mixed[0]}, ${mixed[1]}, ${mixed[2]})`;
+}
+
+function hslToRgb(hue, saturation, lightness) {
+    const chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
+    const huePrime = hue / 60;
+    const x = chroma * (1 - Math.abs((huePrime % 2) - 1));
+    let red = 0;
+    let green = 0;
+    let blue = 0;
+
+    if (huePrime >= 0 && huePrime < 1) {
+        red = chroma;
+        green = x;
+    } else if (huePrime >= 1 && huePrime < 2) {
+        red = x;
+        green = chroma;
+    } else if (huePrime >= 2 && huePrime < 3) {
+        green = chroma;
+        blue = x;
+    } else if (huePrime >= 3 && huePrime < 4) {
+        green = x;
+        blue = chroma;
+    } else if (huePrime >= 4 && huePrime < 5) {
+        red = x;
+        blue = chroma;
+    } else {
+        red = chroma;
+        blue = x;
+    }
+
+    const match = lightness - chroma / 2;
+
+    return [
+        Math.round((red + match) * 255),
+        Math.round((green + match) * 255),
+        Math.round((blue + match) * 255)
+    ];
+}
+
+function getWheelWhiteOverlayAmount(saturation) {
+    if (saturation <= 0.04) {
+        return 1;
+    }
+
+    if (saturation <= 0.1) {
+        return 1 - ((saturation - 0.04) / 0.06) * 0.1;
+    }
+
+    if (saturation <= 0.56) {
+        return 0.9 - ((saturation - 0.1) / 0.46) * 0.85;
+    }
+
+    if (saturation <= 0.72) {
+        return 0.05 - ((saturation - 0.56) / 0.16) * 0.05;
+    }
+
+    return 0;
+}
+
+function getColorWheelRgb(hue, saturation) {
+    const baseColor = hslToRgb(hue, 1, 0.5);
+    const whiteAmount = getWheelWhiteOverlayAmount(saturation);
+
+    return baseColor.map((channel) => {
+        return Math.round(channel + (255 - channel) * whiteAmount);
+    });
+}
+
+function rgbToHex(red, green, blue) {
+    return `#${[red, green, blue].map((channel) => {
+        return channel.toString(16).padStart(2, "0");
+    }).join("")}`.toUpperCase();
+}
+
+function hexToRgb(hexColor) {
+    const cleanHex = hexColor.replace("#", "");
+
+    return [
+        parseInt(cleanHex.slice(0, 2), 16),
+        parseInt(cleanHex.slice(2, 4), 16),
+        parseInt(cleanHex.slice(4, 6), 16)
+    ];
+}
+
+function rgbToCmyk(red, green, blue) {
+    const normalizedRed = red / 255;
+    const normalizedGreen = green / 255;
+    const normalizedBlue = blue / 255;
+    const black = 1 - Math.max(normalizedRed, normalizedGreen, normalizedBlue);
+
+    if (black === 1) {
+        return [0, 0, 0, 100];
+    }
+
+    const cyan = (1 - normalizedRed - black) / (1 - black);
+    const magenta = (1 - normalizedGreen - black) / (1 - black);
+    const yellow = (1 - normalizedBlue - black) / (1 - black);
+
+    return [cyan, magenta, yellow, black].map((channel) => {
+        return Math.round(channel * 100);
+    });
 }
 
 function getRainbowColor(x, y, time) {
@@ -84,6 +204,18 @@ function resizeOrbCanvas() {
     orbCanvas.width = Math.round(nextSize * nextPixelRatio);
     orbCanvas.height = Math.round(nextSize * nextPixelRatio);
     orbContext.setTransform(nextPixelRatio, 0, 0, nextPixelRatio, 0, 0);
+}
+
+function resizeColorWheelCanvas() {
+    if (!colorWheel) {
+        return;
+    }
+
+    const rect = colorWheel.getBoundingClientRect();
+    const nextSize = Math.max(1, Math.round(rect.width));
+
+    colorWheel.width = nextSize;
+    colorWheel.height = nextSize;
 }
 
 function buildOrb() {
@@ -168,6 +300,11 @@ function handlePointerMove(event) {
         return;
     }
 
+    if (document.body.classList.contains("tool-view-active")) {
+        resetTilt();
+        return;
+    }
+
     const rect = orbShell.getBoundingClientRect();
     const x = (event.clientX - rect.left) / rect.width - 0.5;
     const y = (event.clientY - rect.top) / rect.height - 0.5;
@@ -206,6 +343,162 @@ function updateToolConnector() {
     toolConnector.style.setProperty("--connector-top", `${startY}px`);
     toolConnector.style.setProperty("--connector-length", `${length}px`);
     toolConnector.style.setProperty("--connector-angle", `${angle}deg`);
+}
+
+function updateSelectedColor(hexColor, rgbChannels = hexToRgb(hexColor)) {
+    selectedColor = hexColor;
+    const [red, green, blue] = rgbChannels;
+    const [cyan, magenta, yellow, black] = rgbToCmyk(red, green, blue);
+
+    if (selectedColorSphere) {
+        selectedColorSphere.style.setProperty("--selected-color", selectedColor);
+    }
+
+    if (selectedColorLabel) {
+        selectedColorLabel.textContent = selectedColor;
+        selectedColorLabel.classList.remove("is-empty");
+    }
+
+    if (selectedRed) {
+        selectedRed.textContent = red;
+    }
+
+    if (selectedGreen) {
+        selectedGreen.textContent = green;
+    }
+
+    if (selectedBlue) {
+        selectedBlue.textContent = blue;
+    }
+
+    if (selectedAlpha) {
+        selectedAlpha.textContent = "1";
+    }
+
+    if (selectedCyan) {
+        selectedCyan.textContent = cyan;
+    }
+
+    if (selectedMagenta) {
+        selectedMagenta.textContent = magenta;
+    }
+
+    if (selectedYellow) {
+        selectedYellow.textContent = yellow;
+    }
+
+    if (selectedBlack) {
+        selectedBlack.textContent = black;
+    }
+}
+
+function moveColorWheelMarker(x, y) {
+    if (!colorWheelMarker) {
+        return;
+    }
+
+    window.clearTimeout(markerHideTimeout);
+    colorWheelMarker.style.setProperty("--marker-x", `${x}px`);
+    colorWheelMarker.style.setProperty("--marker-y", `${y}px`);
+    colorWheelMarker.classList.add("is-visible");
+}
+
+function scheduleColorWheelMarkerHide() {
+    window.clearTimeout(markerHideTimeout);
+    markerHideTimeout = window.setTimeout(() => {
+        colorWheelMarker?.classList.remove("is-visible");
+    }, 5000);
+}
+
+function selectColorFromWheel(event) {
+    if (!colorWheel) {
+        return;
+    }
+
+    const rect = colorWheel.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const center = rect.width / 2;
+    const deltaX = x - center;
+    const deltaY = y - center;
+    const distance = Math.hypot(deltaX, deltaY);
+
+    if (distance > center) {
+        return;
+    }
+
+    const hue = (Math.atan2(deltaY, deltaX) * 180 / Math.PI + 360) % 360;
+    const saturation = Math.min(distance / center, 1);
+    const [red, green, blue] = getColorWheelRgb(hue, saturation);
+    const shellRect = orbShell?.getBoundingClientRect();
+
+    if (shellRect) {
+        moveColorWheelMarker(event.clientX - shellRect.left, event.clientY - shellRect.top);
+    }
+
+    updateSelectedColor(rgbToHex(red, green, blue), [red, green, blue]);
+}
+
+function startColorWheelDrag(event) {
+    if (!colorWheel) {
+        return;
+    }
+
+    isDraggingColorWheel = true;
+    colorWheel.setPointerCapture?.(event.pointerId);
+    selectColorFromWheel(event);
+}
+
+function dragColorWheel(event) {
+    if (!isDraggingColorWheel) {
+        return;
+    }
+
+    selectColorFromWheel(event);
+}
+
+function endColorWheelDrag(event) {
+    if (!isDraggingColorWheel) {
+        return;
+    }
+
+    isDraggingColorWheel = false;
+    colorWheel?.releasePointerCapture?.(event.pointerId);
+    scheduleColorWheelMarkerHide();
+}
+
+function enterColorTool(event) {
+    event?.preventDefault();
+    document.body.classList.add("tool-view-active");
+
+    if (toolIntro && !hasSeenToolIntro) {
+        toolIntro.setAttribute("aria-hidden", "false");
+    }
+
+    window.requestAnimationFrame(() => {
+        resizeColorWheelCanvas();
+
+        if (!hasSeenToolIntro) {
+            document.body.classList.add("tool-intro-visible");
+        }
+
+        updateToolConnector();
+    });
+}
+
+function dismissToolIntro() {
+    hasSeenToolIntro = true;
+    document.body.classList.remove("tool-intro-visible");
+
+    window.setTimeout(() => {
+        toolIntro?.setAttribute("aria-hidden", "true");
+    }, 380);
+}
+
+function exitColorTool() {
+    document.body.classList.remove("tool-view-active", "tool-intro-visible");
+    toolIntro?.setAttribute("aria-hidden", "true");
+    updateToolConnector();
 }
 
 function startToolSelectorMotion() {
@@ -352,14 +645,15 @@ function startToolSelectorMotion() {
     toolDelay(random(1.2, 3.8), spinIcon);
     updateToolConnector();
 
-    toolSelector.addEventListener("pointerenter", () => setToolMotionScale(0.16));
+    toolSelector.addEventListener("pointerenter", () => setToolMotionScale(0.72));
     toolSelector.addEventListener("pointerleave", () => setToolMotionScale(1));
-    toolSelector.addEventListener("focus", () => setToolMotionScale(0.16));
+    toolSelector.addEventListener("focus", () => setToolMotionScale(0.72));
     toolSelector.addEventListener("blur", () => setToolMotionScale(1));
 }
 
 buildOrb();
 resizeOrbCanvas();
+resizeColorWheelCanvas();
 startOrbAnimation();
 startToolSelectorMotion();
 
@@ -368,11 +662,34 @@ if (orbShell) {
     orbShell.addEventListener("pointerleave", resetTilt);
 }
 
+toolSelector?.addEventListener("click", enterColorTool);
+startExploringButton?.addEventListener("click", dismissToolIntro);
+toolBackButton?.addEventListener("click", exitColorTool);
+colorWheel?.addEventListener("pointerdown", startColorWheelDrag);
+colorWheel?.addEventListener("pointermove", dragColorWheel);
+colorWheel?.addEventListener("pointerup", endColorWheelDrag);
+colorWheel?.addEventListener("pointercancel", endColorWheelDrag);
+colorWheel?.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+        return;
+    }
+
+    event.preventDefault();
+
+    const rect = colorWheel.getBoundingClientRect();
+    selectColorFromWheel({
+        clientX: rect.left + rect.width / 2,
+        clientY: rect.top + rect.height / 2
+    });
+    scheduleColorWheelMarkerHide();
+});
+
 window.addEventListener("pagehide", () => {
     stopOrbAnimation();
 });
 
 window.addEventListener("resize", () => {
     resizeOrbCanvas();
+    resizeColorWheelCanvas();
     updateToolConnector();
 });

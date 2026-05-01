@@ -26,20 +26,91 @@
 
       <section class="hero" aria-label="Interactive rainbow color field">
         <div class="visual-stage" id="motion" aria-label="Animated rainbow square orb">
+          <aside class="tool-panel tool-panel--left" id="color-tool" aria-label="Color Decision Tool">
+            <p class="tool-eyebrow">Color system 01</p>
+            <h1>Color Decision Tool</h1>
+            <div class="tool-copy">
+              <p>Color shapes how we perceive and interact with design.</p>
+              <p>It influences mood, attention, and behavior—often before users read a single word.</p>
+              <p>For example, many fast food brands use red and yellow intentionally:</p>
+              <ul>
+                <li>Red is associated with energy, urgency, and appetite</li>
+                <li>Yellow conveys warmth, happiness, and visibility</li>
+              </ul>
+              <p>Together, they create a fast, attention-grabbing experience that encourages quick decisions and engagement.</p>
+              <p>Choose a color to explore how it affects mood, hierarchy, and usability in design.</p>
+            </div>
+          </aside>
+
           <span class="tool-connector" aria-hidden="true"></span>
           <a class="tool-selector tool-selector--color" href="#color-tool" aria-label="Open color tool">
             <img src="assets/icons8-color-50.png" alt="">
           </a>
+
           <div class="orb-shadow" aria-hidden="true"></div>
           <div class="orb-shell" id="orb-shell">
             <canvas class="orb-grid" id="rainbow-orb" aria-hidden="true"></canvas>
+            <span class="color-wheel-surface" aria-hidden="true"></span>
+            <canvas class="color-wheel" id="color-wheel" aria-label="Color wheel picker" role="button" tabindex="0"></canvas>
+            <span class="color-wheel-center" aria-hidden="true"></span>
+            <span class="color-wheel-marker" id="color-wheel-marker" aria-hidden="true"></span>
           </div>
           <div class="orb-caption">
             <span>rainbow field</span>
             <span>motion field 01</span>
           </div>
+
+          <aside class="tool-panel tool-panel--right color-controls" aria-label="Selected color controls">
+            <h2 class="color-controls__title">Controls_</h2>
+
+            <div class="color-control">
+              <p class="color-control__label">Select Color</p>
+              <div class="color-swatch" id="selected-color-sphere" aria-hidden="true"></div>
+            </div>
+
+            <div class="color-control">
+              <p class="color-control__label">HEX</p>
+              <p class="color-value color-value--hex" id="selected-color-label">No color selected</p>
+            </div>
+
+            <div class="color-control">
+              <p class="color-control__label">RGBA</p>
+              <div class="color-channel-grid" aria-label="Selected color RGBA values">
+                <p class="color-channel"><span class="channel-red">R:</span> <span id="selected-r">--</span></p>
+                <p class="color-channel"><span class="channel-green">G:</span> <span id="selected-g">--</span></p>
+                <p class="color-channel"><span class="channel-blue">B:</span> <span id="selected-b">--</span></p>
+                <p class="color-channel"><span>A:</span> <span id="selected-a">1</span></p>
+              </div>
+            </div>
+
+            <div class="color-control">
+              <p class="color-control__label">CMYK (%)</p>
+              <div class="color-channel-grid" aria-label="Selected color CMYK values">
+                <p class="color-channel"><span class="channel-cyan">C:</span> <span id="selected-c">--</span></p>
+                <p class="color-channel"><span class="channel-magenta">M:</span> <span id="selected-m">--</span></p>
+                <p class="color-channel"><span class="channel-yellow">Y:</span> <span id="selected-y">--</span></p>
+                <p class="color-channel"><span>K:</span> <span id="selected-k">--</span></p>
+              </div>
+            </div>
+
+            <div class="color-info">
+              <h3>What is a Color Info Tool?</h3>
+              <p>The Color Info tool helps translate a selected color into practical values designers can use across interfaces, systems, and visual decisions.</p>
+            </div>
+          </aside>
+
+          <button class="tool-back-button" id="tool-back-btn" type="button">Back</button>
         </div>
       </section>
+
+      <div class="tool-intro" id="tool-intro" aria-hidden="true">
+        <div class="tool-intro__content" role="dialog" aria-modal="true" aria-labelledby="tool-intro-title">
+          <p class="tool-eyebrow">Color Decision Tool</p>
+          <h2 id="tool-intro-title">Color shapes perception</h2>
+          <p>Choose a color to explore how it affects mood, contrast, and usability.</p>
+          <button class="tool-intro__button" id="start-exploring-btn" type="button">Start Exploring</button>
+        </div>
+      </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
