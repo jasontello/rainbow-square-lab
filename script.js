@@ -3,10 +3,10 @@ const orbContext = orbCanvas?.getContext("2d");
 const colorWheel = document.getElementById("color-wheel");
 const orbShell = document.getElementById("orb-shell");
 const visualStage = document.getElementById("motion");
-const toolSelector = document.querySelector(".tool-selector");
-const toolSelectorIcon = document.querySelector(".tool-selector img");
-const toolConnector = document.querySelector(".tool-connector");
-const toolSelectorGlow = toolSelector;
+const toolSelectors = Array.from(document.querySelectorAll(".tool-selector"));
+const colorToolSelector = document.querySelector(".tool-selector--color");
+const toolSelectorIcons = Array.from(document.querySelectorAll(".tool-selector img"));
+const toolConnectors = Array.from(document.querySelectorAll(".tool-connector"));
 const toolIntro = document.getElementById("tool-intro");
 const startExploringButton = document.getElementById("start-exploring-btn");
 const toolBackButton = document.getElementById("tool-back-btn");
@@ -322,27 +322,44 @@ function resetTilt() {
     orbShell.style.setProperty("--tilt-y", "0deg");
 }
 
-function updateToolConnector() {
-    if (!visualStage || !orbShell || !toolSelector || !toolConnector) {
+function updateToolConnectorFor(selector, connector) {
+    if (!visualStage || !orbShell || !selector || !connector) {
         return;
     }
 
     const stageRect = visualStage.getBoundingClientRect();
     const orbRect = orbShell.getBoundingClientRect();
-    const selectorRect = toolSelector.getBoundingClientRect();
-    const startX = orbRect.left + orbRect.width * 0.29 - stageRect.left;
-    const startY = orbRect.top + orbRect.height * 0.32 - stageRect.top;
-    const endX = selectorRect.left + selectorRect.width * 0.72 - stageRect.left;
-    const endY = selectorRect.top + selectorRect.height * 0.72 - stageRect.top;
+    const selectorRect = selector.getBoundingClientRect();
+    const orbCenterX = orbRect.left + orbRect.width / 2;
+    const orbCenterY = orbRect.top + orbRect.height / 2;
+    const selectorCenterX = selectorRect.left + selectorRect.width / 2;
+    const selectorCenterY = selectorRect.top + selectorRect.height / 2;
+    const directionX = selectorCenterX - orbCenterX;
+    const directionY = selectorCenterY - orbCenterY;
+    const directionLength = Math.hypot(directionX, directionY) || 1;
+    const orbConnectionRadius = orbRect.width * 0.42;
+    const startX = orbCenterX + (directionX / directionLength) * orbConnectionRadius - stageRect.left;
+    const startY = orbCenterY + (directionY / directionLength) * orbConnectionRadius - stageRect.top;
+    const endX = selectorCenterX - stageRect.left;
+    const endY = selectorCenterY - stageRect.top;
     const deltaX = endX - startX;
     const deltaY = endY - startY;
     const length = Math.hypot(deltaX, deltaY);
     const angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
 
-    toolConnector.style.setProperty("--connector-left", `${startX}px`);
-    toolConnector.style.setProperty("--connector-top", `${startY}px`);
-    toolConnector.style.setProperty("--connector-length", `${length}px`);
-    toolConnector.style.setProperty("--connector-angle", `${angle}deg`);
+    connector.style.setProperty("--connector-left", `${startX}px`);
+    connector.style.setProperty("--connector-top", `${startY}px`);
+    connector.style.setProperty("--connector-length", `${length}px`);
+    connector.style.setProperty("--connector-angle", `${angle}deg`);
+}
+
+function updateToolConnector() {
+    toolConnectors.forEach((connector) => {
+        const toolId = connector.dataset.toolLine;
+        const selector = document.querySelector(`[data-tool-id="${toolId}"]`);
+
+        updateToolConnectorFor(selector, connector);
+    });
 }
 
 function updateSelectedColor(hexColor, rgbChannels = hexToRgb(hexColor)) {
@@ -504,7 +521,7 @@ function exitColorTool() {
 function startToolSelectorMotion() {
     const shouldReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    if (!window.gsap || !toolSelector || shouldReduceMotion) {
+    if (!window.gsap || toolSelectors.length === 0 || shouldReduceMotion) {
         updateToolConnector();
         return;
     }
@@ -550,37 +567,37 @@ function startToolSelectorMotion() {
         return delayedCall;
     }
 
-    function driftSelector() {
-        toolTo(toolSelector, {
+    function driftSelector(selector) {
+        toolTo(selector, {
             x: random(-52, 34),
             y: random(-42, 28),
             duration: random(3.2, 6.2),
             ease: "sine.inOut",
             onUpdate: updateToolConnector,
-            onComplete: driftSelector
+            onComplete: () => driftSelector(selector)
         });
     }
 
-    function driftIcon() {
-        if (!toolSelectorIcon) {
+    function driftIcon(icon) {
+        if (!icon) {
             return;
         }
 
-        toolTo(toolSelectorIcon, {
+        toolTo(icon, {
             rotation: random(-7, 7),
             duration: random(2.2, 4.2),
             ease: "sine.inOut",
             onUpdate: updateToolConnector,
-            onComplete: driftIcon
+            onComplete: () => driftIcon(icon)
         });
     }
 
-    function pulseIconSize() {
-        if (!toolSelectorIcon) {
+    function pulseIconSize(icon) {
+        if (!icon) {
             return;
         }
 
-        toolTo(toolSelectorIcon, {
+        toolTo(icon, {
             scale: random(1.06, 1.14),
             duration: random(0.34, 0.72),
             repeat: 1,
@@ -588,17 +605,17 @@ function startToolSelectorMotion() {
             ease: "sine.inOut",
             onUpdate: updateToolConnector,
             onComplete: () => {
-                toolDelay(random(1.4, 4.4), pulseIconSize);
+                toolDelay(random(1.4, 4.4), () => pulseIconSize(icon));
             }
         });
     }
 
-    function pulseGlow() {
-        if (!toolSelectorGlow) {
+    function pulseGlow(selector) {
+        if (!selector) {
             return;
         }
 
-        toolTo(toolSelectorGlow, {
+        toolTo(selector, {
             "--selector-glow-opacity": random(0.12, 0.3),
             duration: random(1.1, 2.4),
             repeat: 1,
@@ -606,29 +623,13 @@ function startToolSelectorMotion() {
             repeatDelay: random(0.05, 0.28),
             ease: "sine.inOut",
             onComplete: () => {
-                toolDelay(random(0.35, 1.8), pulseGlow);
+                toolDelay(random(0.35, 1.8), () => pulseGlow(selector));
             }
         });
     }
 
-    function spinIcon() {
-        if (!toolSelectorIcon) {
-            return;
-        }
-
-        toolTo(toolSelectorIcon, {
-            rotation: `+=${random([-360, 360, 540, -540])}`,
-            duration: random(0.85, 1.55),
-            ease: "power2.inOut",
-            onUpdate: updateToolConnector,
-            onComplete: () => {
-                toolDelay(random(2.2, 6), spinIcon);
-            }
-        });
-    }
-
-    if (toolConnector) {
-        toolTo(toolConnector, {
+    toolConnectors.forEach((connector) => {
+        toolTo(connector, {
             opacity: 0.82,
             backgroundPosition: "100% 50%",
             duration: 3.4,
@@ -636,19 +637,23 @@ function startToolSelectorMotion() {
             yoyo: true,
             ease: "sine.inOut"
         });
-    }
+    });
 
-    driftSelector();
-    driftIcon();
-    toolDelay(random(0.8, 2.6), pulseIconSize);
-    pulseGlow();
-    toolDelay(random(1.2, 3.8), spinIcon);
+    toolSelectors.forEach((selector) => {
+        driftSelector(selector);
+        pulseGlow(selector);
+        selector.addEventListener("pointerenter", () => setToolMotionScale(0.72));
+        selector.addEventListener("pointerleave", () => setToolMotionScale(1));
+        selector.addEventListener("focus", () => setToolMotionScale(0.72));
+        selector.addEventListener("blur", () => setToolMotionScale(1));
+    });
+
+    toolSelectorIcons.forEach((icon) => {
+        driftIcon(icon);
+        toolDelay(random(0.8, 2.6), () => pulseIconSize(icon));
+    });
+
     updateToolConnector();
-
-    toolSelector.addEventListener("pointerenter", () => setToolMotionScale(0.72));
-    toolSelector.addEventListener("pointerleave", () => setToolMotionScale(1));
-    toolSelector.addEventListener("focus", () => setToolMotionScale(0.72));
-    toolSelector.addEventListener("blur", () => setToolMotionScale(1));
 }
 
 buildOrb();
@@ -662,7 +667,14 @@ if (orbShell) {
     orbShell.addEventListener("pointerleave", resetTilt);
 }
 
-toolSelector?.addEventListener("click", enterColorTool);
+colorToolSelector?.addEventListener("click", enterColorTool);
+toolSelectors.forEach((selector) => {
+    if (selector === colorToolSelector) {
+        return;
+    }
+
+    selector.addEventListener("click", (event) => event.preventDefault());
+});
 startExploringButton?.addEventListener("click", dismissToolIntro);
 toolBackButton?.addEventListener("click", exitColorTool);
 colorWheel?.addEventListener("pointerdown", startColorWheelDrag);
