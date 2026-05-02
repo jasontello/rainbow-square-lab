@@ -50,6 +50,7 @@ let selectedColor = null;
 let isDraggingColorWheel = false;
 let markerHideTimeout = null;
 let hasSeenToolIntro = false;
+let lockAudioContext = null;
 
 function wrapIndex(index, length) {
     return ((index % length) + length) % length;
@@ -279,6 +280,7 @@ function animateOrb(time = 0) {
         orbContext.restore();
     });
 
+    updateToolConnector();
     animationFrame = window.requestAnimationFrame(animateOrb);
 }
 
@@ -311,6 +313,7 @@ function handlePointerMove(event) {
 
     orbShell.style.setProperty("--tilt-y", `${x * 12}deg`);
     orbShell.style.setProperty("--tilt-x", `${y * -12}deg`);
+    updateToolConnector();
 }
 
 function resetTilt() {
@@ -320,6 +323,7 @@ function resetTilt() {
 
     orbShell.style.setProperty("--tilt-x", "0deg");
     orbShell.style.setProperty("--tilt-y", "0deg");
+    updateToolConnector();
 }
 
 function updateToolConnectorFor(selector, connector) {
@@ -327,19 +331,22 @@ function updateToolConnectorFor(selector, connector) {
         return;
     }
 
+    const toolId = connector.dataset.toolLine;
+    const anchor = orbShell.querySelector(`[data-tool-anchor="${toolId}"]`);
+
+    if (!anchor) {
+        return;
+    }
+
     const stageRect = visualStage.getBoundingClientRect();
-    const orbRect = orbShell.getBoundingClientRect();
+    const anchorRect = anchor.getBoundingClientRect();
     const selectorRect = selector.getBoundingClientRect();
-    const orbCenterX = orbRect.left + orbRect.width / 2;
-    const orbCenterY = orbRect.top + orbRect.height / 2;
+    const anchorCenterX = anchorRect.left + anchorRect.width / 2;
+    const anchorCenterY = anchorRect.top + anchorRect.height / 2;
     const selectorCenterX = selectorRect.left + selectorRect.width / 2;
     const selectorCenterY = selectorRect.top + selectorRect.height / 2;
-    const directionX = selectorCenterX - orbCenterX;
-    const directionY = selectorCenterY - orbCenterY;
-    const directionLength = Math.hypot(directionX, directionY) || 1;
-    const orbConnectionRadius = orbRect.width * 0.42;
-    const startX = orbCenterX + (directionX / directionLength) * orbConnectionRadius - stageRect.left;
-    const startY = orbCenterY + (directionY / directionLength) * orbConnectionRadius - stageRect.top;
+    const startX = anchorCenterX - stageRect.left;
+    const startY = anchorCenterY - stageRect.top;
     const endX = selectorCenterX - stageRect.left;
     const endY = selectorCenterY - stageRect.top;
     const deltaX = endX - startX;
@@ -409,6 +416,66 @@ function updateSelectedColor(hexColor, rgbChannels = hexToRgb(hexColor)) {
     }
 }
 
+function playLockSound() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContext) {
+        return;
+    }
+
+    lockAudioContext ??= new AudioContext();
+    lockAudioContext.resume?.();
+
+    const startTime = lockAudioContext.currentTime;
+    const gain = lockAudioContext.createGain();
+    const click = lockAudioContext.createOscillator();
+    const thunk = lockAudioContext.createOscillator();
+
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.16, startTime + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.13);
+    gain.connect(lockAudioContext.destination);
+
+    click.type = "square";
+    click.frequency.setValueAtTime(880, startTime);
+    click.frequency.exponentialRampToValueAtTime(340, startTime + 0.055);
+    click.connect(gain);
+    click.start(startTime);
+    click.stop(startTime + 0.07);
+
+    thunk.type = "triangle";
+    thunk.frequency.setValueAtTime(180, startTime + 0.035);
+    thunk.frequency.exponentialRampToValueAtTime(90, startTime + 0.13);
+    thunk.connect(gain);
+    thunk.start(startTime + 0.035);
+    thunk.stop(startTime + 0.14);
+}
+
+function shakeLockedTool(selector) {
+    const icon = selector.querySelector("img");
+
+    if (!window.gsap || !icon) {
+        return;
+    }
+
+    window.gsap.fromTo(icon, {
+        x: 0
+    }, {
+        x: 0,
+        duration: 0.34,
+        ease: "power2.out",
+        keyframes: [
+            { x: -5, duration: 0.04 },
+            { x: 5, duration: 0.05 },
+            { x: -4, duration: 0.05 },
+            { x: 4, duration: 0.05 },
+            { x: -2, duration: 0.04 },
+            { x: 0, duration: 0.05 }
+        ],
+        onUpdate: updateToolConnector
+    });
+}
+
 function moveColorWheelMarker(x, y) {
     if (!colorWheelMarker) {
         return;
@@ -444,7 +511,7 @@ function selectColorFromWheel(event) {
         return;
     }
 
-    const hue = (Math.atan2(deltaY, deltaX) * 180 / Math.PI + 360) % 360;
+    const hue = (Math.atan2(deltaY, deltaX) * 180 / Math.PI + 450) % 360;
     const saturation = Math.min(distance / center, 1);
     const [red, green, blue] = getColorWheelRgb(hue, saturation);
     const shellRect = orbShell?.getBoundingClientRect();
@@ -704,7 +771,11 @@ toolSelectors.forEach((selector) => {
         return;
     }
 
-    selector.addEventListener("click", (event) => event.preventDefault());
+    selector.addEventListener("click", (event) => {
+        event.preventDefault();
+        playLockSound();
+        shakeLockedTool(selector);
+    });
 });
 startExploringButton?.addEventListener("click", dismissToolIntro);
 toolBackButton?.addEventListener("click", exitColorTool);

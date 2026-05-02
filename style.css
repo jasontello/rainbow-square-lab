@@ -240,7 +240,7 @@ button {
     max-width: 10ch;
     margin: 0 0 1.25rem;
     font-size: clamp(2.2rem, 4.6vw, 4.8rem);
-    font-weight: 900;
+    font-weight: 500;
     line-height: 0.9;
 }
 
@@ -443,7 +443,7 @@ button {
 .tool-intro__content h2 {
     margin: 0;
     font-size: clamp(2.4rem, 6vw, 5.4rem);
-    font-weight: 900;
+    font-weight: 500;
     letter-spacing: -0.04em;
     line-height: 0.92;
 }
@@ -655,6 +655,39 @@ button {
 
 .orb-shell::after {
     transform: rotate(-21deg) scaleY(0.64);
+}
+
+.orbit-anchor {
+    position: absolute;
+    left: var(--anchor-x);
+    top: var(--anchor-y);
+    z-index: 1;
+    width: 0.45rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+}
+
+.orbit-anchor--color {
+    --anchor-x: 23%;
+    --anchor-y: 35%;
+}
+
+.orbit-anchor--top-right {
+    --anchor-x: 86%;
+    --anchor-y: 30%;
+}
+
+.orbit-anchor--bottom-right {
+    --anchor-x: 81%;
+    --anchor-y: 61%;
+}
+
+.orbit-anchor--bottom-left {
+    --anchor-x: 22%;
+    --anchor-y: 65%;
 }
 
 .tool-view-active .orb-shell::before,
