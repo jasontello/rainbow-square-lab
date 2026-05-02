@@ -21,6 +21,7 @@ const selectedMagenta = document.getElementById("selected-m");
 const selectedYellow = document.getElementById("selected-y");
 const selectedBlack = document.getElementById("selected-k");
 const colorWheelMarker = document.getElementById("color-wheel-marker");
+const colorDropperAudio = new Audio("assets/icondropperclick.wav");
 
 const ORB_SIZE = 31;
 const ORB_CENTER = (ORB_SIZE - 1) / 2;
@@ -52,6 +53,8 @@ let isDraggingColorWheel = false;
 let markerHideTimeout = null;
 let hasSeenToolIntro = false;
 let lockAudioContext = null;
+
+colorDropperAudio.preload = "auto";
 
 function wrapIndex(index, length) {
     return ((index % length) + length) % length;
@@ -459,6 +462,11 @@ function playLockSound() {
     thunk.stop(startTime + 0.14);
 }
 
+function playColorDropperSound() {
+    colorDropperAudio.currentTime = 0;
+    colorDropperAudio.play().catch(() => {});
+}
+
 function shakeLockedTool(selector) {
     const shakeTarget = selector.querySelector(".tool-selector__shake");
 
@@ -564,6 +572,7 @@ function endColorWheelDrag(event) {
 
 function enterColorTool(event) {
     event?.preventDefault();
+    playColorDropperSound();
     document.body.classList.add("tool-view-active");
 
     if (toolIntro && !hasSeenToolIntro) {
