@@ -552,6 +552,35 @@ button {
     will-change: width, transform, opacity, background-position;
 }
 
+.tool-connector::after {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 1.45rem;
+    height: 0.42rem;
+    border-radius: 999px;
+    background:
+        radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.5) 38%, transparent 72%);
+    content: "";
+    filter: blur(1px);
+    opacity: 0;
+    transform: translateY(-50%);
+    animation: connector-light-pass 4.6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+    will-change: opacity, transform;
+}
+
+.tool-connector[data-tool-line="top-right"]::after {
+    animation-delay: 0.65s;
+}
+
+.tool-connector[data-tool-line="bottom-right"]::after {
+    animation-delay: 1.25s;
+}
+
+.tool-connector[data-tool-line="bottom-left"]::after {
+    animation-delay: 1.85s;
+}
+
 .tool-selector::before {
     position: absolute;
     inset: -0.7rem;
@@ -591,6 +620,14 @@ button {
 .tool-selector:focus-visible {
     outline: 2px solid rgba(24, 23, 19, 0.35);
     outline-offset: 0.45rem;
+}
+
+.tool-selector__shake {
+    width: 100%;
+    height: 100%;
+    display: block;
+    transform-origin: center;
+    will-change: transform;
 }
 
 .tool-selector img {
@@ -671,12 +708,12 @@ button {
 }
 
 .orbit-anchor--color {
-    --anchor-x: 23%;
+    --anchor-x: 22.9%;
     --anchor-y: 35%;
 }
 
 .orbit-anchor--top-right {
-    --anchor-x: 86%;
+    --anchor-x: 86.2%;
     --anchor-y: 30%;
 }
 
@@ -686,8 +723,8 @@ button {
 }
 
 .orbit-anchor--bottom-left {
-    --anchor-x: 22%;
-    --anchor-y: 65%;
+    --anchor-x: 22.1%;
+    --anchor-y: 63%;
 }
 
 .tool-view-active .orb-shell::before,
@@ -880,6 +917,26 @@ button {
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes connector-light-pass {
+    0% {
+        opacity: 0;
+        transform: translateX(0) translateY(-50%) scaleX(0.45);
+    }
+
+    18% {
+        opacity: 0.82;
+    }
+
+    58% {
+        opacity: 0.65;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateX(calc(var(--connector-length, 0px) - 1.45rem)) translateY(-50%) scaleX(0.2);
     }
 }
 

@@ -25,6 +25,7 @@ const colorWheelMarker = document.getElementById("color-wheel-marker");
 const ORB_SIZE = 31;
 const ORB_CENTER = (ORB_SIZE - 1) / 2;
 const ORB_RADIUS = 14.4;
+const CONNECTOR_ICON_GAP = 8;
 const BASE_COLORS = [
     "#36abe1",
     "#2fa8d4",
@@ -347,8 +348,15 @@ function updateToolConnectorFor(selector, connector) {
     const selectorCenterY = selectorRect.top + selectorRect.height / 2;
     const startX = anchorCenterX - stageRect.left;
     const startY = anchorCenterY - stageRect.top;
-    const endX = selectorCenterX - stageRect.left;
-    const endY = selectorCenterY - stageRect.top;
+    const centerEndX = selectorCenterX - stageRect.left;
+    const centerEndY = selectorCenterY - stageRect.top;
+    const centerDeltaX = centerEndX - startX;
+    const centerDeltaY = centerEndY - startY;
+    const centerDistance = Math.hypot(centerDeltaX, centerDeltaY) || 1;
+    const iconRadius = Math.min(selectorRect.width, selectorRect.height) / 2;
+    const endPullback = iconRadius + CONNECTOR_ICON_GAP;
+    const endX = centerEndX - (centerDeltaX / centerDistance) * endPullback;
+    const endY = centerEndY - (centerDeltaY / centerDistance) * endPullback;
     const deltaX = endX - startX;
     const deltaY = endY - startY;
     const length = Math.hypot(deltaX, deltaY);
@@ -452,25 +460,28 @@ function playLockSound() {
 }
 
 function shakeLockedTool(selector) {
-    const icon = selector.querySelector("img");
+    const shakeTarget = selector.querySelector(".tool-selector__shake");
 
-    if (!window.gsap || !icon) {
+    if (!window.gsap || !shakeTarget) {
         return;
     }
 
-    window.gsap.fromTo(icon, {
-        x: 0
+    window.gsap.killTweensOf(shakeTarget);
+    window.gsap.fromTo(shakeTarget, {
+        x: 0,
+        rotation: 0
     }, {
         x: 0,
-        duration: 0.34,
-        ease: "power2.out",
+        rotation: 0,
+        duration: 0.4,
+        ease: "power1.out",
         keyframes: [
-            { x: -5, duration: 0.04 },
-            { x: 5, duration: 0.05 },
-            { x: -4, duration: 0.05 },
-            { x: 4, duration: 0.05 },
-            { x: -2, duration: 0.04 },
-            { x: 0, duration: 0.05 }
+            { x: -7, rotation: -7, duration: 0.05 },
+            { x: 7, rotation: 6, duration: 0.06 },
+            { x: -6, rotation: -5, duration: 0.06 },
+            { x: 5, rotation: 4, duration: 0.06 },
+            { x: -3, rotation: -2, duration: 0.05 },
+            { x: 0, rotation: 0, duration: 0.08 }
         ],
         onUpdate: updateToolConnector
     });
