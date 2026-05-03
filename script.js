@@ -1,6 +1,7 @@
 const orbCanvas = document.getElementById("rainbow-orb");
 const orbContext = orbCanvas?.getContext("2d");
 const colorWheel = document.getElementById("color-wheel");
+const colorWheelSurface = document.querySelector(".color-wheel-surface");
 const orbShell = document.getElementById("orb-shell");
 const visualStage = document.getElementById("motion");
 const toolSelectors = Array.from(document.querySelectorAll(".tool-selector"));
@@ -21,6 +22,7 @@ const selectedBlack = document.getElementById("selected-k");
 const colorWheelMarker = document.getElementById("color-wheel-marker");
 const colorWheelRadiusLine = document.getElementById("color-wheel-radius-line");
 const colorWheelValue = document.getElementById("color-wheel-value");
+const colorWheelReset = document.getElementById("color-wheel-reset");
 const colorDropperAudio = new Audio("assets/icondropperclick.wav");
 const colorPickerPopover = document.getElementById("color-picker-popover");
 const colorPickerField = document.getElementById("color-picker-field");
@@ -211,8 +213,8 @@ function updateWheelToneOverlay() {
     const darkness = wheelTone < 50 ? (50 - wheelTone) / 50 : 0;
     const lightness = wheelTone > 50 ? (wheelTone - 50) / 50 : 0;
 
-    orbShell?.style.setProperty("--wheel-darkness", darkness.toFixed(2));
-    orbShell?.style.setProperty("--wheel-lightness", lightness.toFixed(2));
+    colorWheelSurface?.style.setProperty("--wheel-darkness", darkness.toFixed(2));
+    colorWheelSurface?.style.setProperty("--wheel-lightness", lightness.toFixed(2));
 }
 
 function rgbToHex(red, green, blue) {
@@ -1074,6 +1076,17 @@ colorWheel?.addEventListener("keydown", (event) => {
 });
 colorWheelValue?.addEventListener("input", () => {
     wheelTone = Number(colorWheelValue.value);
+    updateWheelToneOverlay();
+    updateSelectedColorFromWheelValue();
+});
+
+colorWheelReset?.addEventListener("click", () => {
+    wheelTone = 50;
+
+    if (colorWheelValue) {
+        colorWheelValue.value = String(wheelTone);
+    }
+
     updateWheelToneOverlay();
     updateSelectedColorFromWheelValue();
 });

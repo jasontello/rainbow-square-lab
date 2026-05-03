@@ -886,8 +886,6 @@ button {
 }
 
 .color-wheel-surface {
-    --wheel-darkness: 0;
-    --wheel-lightness: 0;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -924,8 +922,8 @@ button {
 .color-wheel-surface::after {
     inset: 0;
     background:
-        linear-gradient(rgba(255, 255, 255, var(--wheel-lightness)), rgba(255, 255, 255, var(--wheel-lightness))),
-        linear-gradient(rgba(0, 0, 0, var(--wheel-darkness)), rgba(0, 0, 0, var(--wheel-darkness)));
+        linear-gradient(rgba(255, 255, 255, var(--wheel-lightness, 0)), rgba(255, 255, 255, var(--wheel-lightness, 0))),
+        linear-gradient(rgba(0, 0, 0, var(--wheel-darkness, 0)), rgba(0, 0, 0, var(--wheel-darkness, 0)));
 }
 
 .color-wheel-center {
@@ -987,19 +985,29 @@ button {
         transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.color-wheel-value {
+.color-wheel-value-control {
     position: absolute;
     top: 50%;
     left: 91%;
     z-index: 7;
-    width: 1rem;
-    height: 38%;
+    width: 4rem;
+    height: 14rem;
     display: grid;
-    place-items: center;
+    grid-template-rows: 1fr auto;
+    justify-items: center;
+    align-items: center;
+    gap: 0.45rem;
     opacity: 0;
     pointer-events: none;
     transform: translate(-50%, -50%);
     transition: opacity 0.35s ease;
+}
+
+.color-wheel-value {
+    width: 1rem;
+    height: 10rem;
+    display: grid;
+    place-items: center;
 }
 
 .color-wheel-value input {
@@ -1036,6 +1044,31 @@ button {
         0 0.35rem 0.9rem rgba(24, 23, 19, 0.18);
 }
 
+.color-wheel-reset {
+    --reset-x: 4.5rem;
+    --reset-y: 0rem;
+    padding: 0.25rem 0.4rem;
+    border: 1px solid rgba(24, 23, 19, 0.16);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.76);
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transform: translate(var(--reset-x), var(--reset-y)) scale(1);
+    transition:
+        transform 0.18s ease,
+        border-color 0.18s ease;
+}
+
+.color-wheel-reset:hover,
+.color-wheel-reset:focus-visible {
+    border-color: rgba(24, 23, 19, 0.42);
+    transform: translate(var(--reset-x), var(--reset-y)) scale(1.05);
+}
+
 .tool-view-active .orb-grid {
     opacity: 0;
     pointer-events: none;
@@ -1053,7 +1086,7 @@ button {
     pointer-events: auto;
 }
 
-.tool-view-active .color-wheel-value {
+.tool-view-active .color-wheel-value-control {
     opacity: 1;
     pointer-events: auto;
 }
