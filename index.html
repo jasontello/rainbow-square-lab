@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Rainbow Square Lab</title>
+    <title>Rainbow Lab</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Urbanist:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -13,14 +13,14 @@
   <body>
     <main class="landing-page">
       <nav class="site-nav" aria-label="Primary navigation">
-        <a class="brand-mark" href="#" aria-label="Rainbow Square Lab home">
+        <a class="brand-mark" href="#" aria-label="Rainbow Lab home">
           <span class="brand-logo" aria-hidden="true">
             <span class="brand-logo__tile brand-logo__tile--cyan"></span>
             <span class="brand-logo__tile brand-logo__tile--yellow"></span>
             <span class="brand-logo__tile brand-logo__tile--magenta"></span>
             <span class="brand-logo__tile brand-logo__tile--blue"></span>
           </span>
-          Rainbow Square Lab
+          Rainbow Lab
         </a>
         <div class="nav-links" aria-label="Project sections">
           <a href="#motion">Motion</a>
@@ -29,19 +29,13 @@
 
       <section class="hero" aria-label="Interactive rainbow color field">
         <div class="visual-stage" id="motion" aria-label="Animated rainbow square orb">
-          <aside class="tool-panel tool-panel--left" id="color-tool" aria-label="Color Decision Tool">
+          <aside class="tool-panel tool-panel--left" id="color-tool" aria-label="Color Decision">
             <p class="tool-eyebrow">Color system 01</p>
-            <h1>Color Decision Tool</h1>
+            <h1>COLOR DECISION</h1>
             <div class="tool-copy">
-              <p>Color shapes how we perceive and interact with design.</p>
-              <p>It influences mood, attention, and behavior—often before users read a single word.</p>
-              <p>For example, many fast food brands use red and yellow intentionally:</p>
-              <ul>
-                <li>Red is associated with energy, urgency, and appetite</li>
-                <li>Yellow conveys warmth, happiness, and visibility</li>
-              </ul>
-              <p>Together, they create a fast, attention-grabbing experience that encourages quick decisions and engagement.</p>
-              <p>Choose a color to explore how it affects mood, hierarchy, and usability in design.</p>
+              <p>Hover over the rainbow circle and select a color.</p>
+              <p>The tool will output the color's HEX, RGBA, and CMYK values.</p>
+              <p>Use the readout to explore primary, secondary, tertiary, complementary, split complementary, analogous, monochromatic, neutral, and clash color relationships.</p>
             </div>
           </aside>
 
@@ -91,7 +85,34 @@
 
             <div class="color-control">
               <p class="color-control__label">Select Color</p>
-              <div class="color-swatch" id="selected-color-sphere" aria-hidden="true"></div>
+              <button class="color-swatch" id="selected-color-sphere" type="button" aria-expanded="false" aria-controls="color-picker-popover" aria-label="Open detailed color picker"></button>
+              <div class="color-picker-popover" id="color-picker-popover" aria-hidden="true">
+                <div class="color-picker-field" id="color-picker-field" aria-label="Choose saturation and brightness" role="button" tabindex="0">
+                  <span class="color-picker-field__marker" id="color-picker-field-marker" aria-hidden="true"></span>
+                </div>
+                <div class="color-picker-controls">
+                  <span class="color-picker-eyedropper" aria-hidden="true"></span>
+                  <span class="color-picker-preview" id="color-picker-preview" aria-hidden="true"></span>
+                  <label class="color-picker-hue">
+                    <span class="sr-only">Hue</span>
+                    <input id="color-picker-hue" type="range" min="0" max="360" value="210">
+                  </label>
+                </div>
+                <div class="color-picker-rgb" aria-label="RGB color channels">
+                  <label>
+                    <input id="color-picker-red" type="number" min="0" max="255" value="115">
+                    <span>R</span>
+                  </label>
+                  <label>
+                    <input id="color-picker-green" type="number" min="0" max="255" value="144">
+                    <span>G</span>
+                  </label>
+                  <label>
+                    <input id="color-picker-blue" type="number" min="0" max="255" value="176">
+                    <span>B</span>
+                  </label>
+                </div>
+              </div>
             </div>
 
             <div class="color-control">
@@ -131,7 +152,7 @@
 
       <div class="tool-intro" id="tool-intro" aria-hidden="true">
         <div class="tool-intro__content" role="dialog" aria-modal="true" aria-labelledby="tool-intro-title">
-          <p class="tool-eyebrow">Color Decision Tool</p>
+          <p class="tool-eyebrow">COLOR DECISION</p>
           <h2 id="tool-intro-title">Color shapes perception</h2>
           <p>Choose a color to explore how it affects mood, contrast, and usability.</p>
           <button class="tool-intro__button" id="start-exploring-btn" type="button">Start Exploring</button>
