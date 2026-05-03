@@ -886,6 +886,8 @@ button {
 }
 
 .color-wheel-surface {
+    --wheel-darkness: 0;
+    --wheel-lightness: 0;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -921,6 +923,9 @@ button {
 
 .color-wheel-surface::after {
     inset: 0;
+    background:
+        linear-gradient(rgba(255, 255, 255, var(--wheel-lightness)), rgba(255, 255, 255, var(--wheel-lightness))),
+        linear-gradient(rgba(0, 0, 0, var(--wheel-darkness)), rgba(0, 0, 0, var(--wheel-darkness)));
 }
 
 .color-wheel-center {
@@ -982,6 +987,55 @@ button {
         transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.color-wheel-value {
+    position: absolute;
+    top: 50%;
+    left: 91%;
+    z-index: 7;
+    width: 1rem;
+    height: 38%;
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.35s ease;
+}
+
+.color-wheel-value input {
+    width: 10rem;
+    height: 0.68rem;
+    border-radius: 999px;
+    appearance: none;
+    background:
+        linear-gradient(90deg, #050505, #777, #f9f9f9);
+    cursor: pointer;
+    transform: rotate(-90deg);
+}
+
+.color-wheel-value input::-webkit-slider-thumb {
+    width: 1.25rem;
+    aspect-ratio: 1;
+    border: 2px solid white;
+    border-radius: 50%;
+    appearance: none;
+    background: var(--ink);
+    box-shadow:
+        0 0 0 1px rgba(24, 23, 19, 0.22),
+        0 0.35rem 0.9rem rgba(24, 23, 19, 0.18);
+}
+
+.color-wheel-value input::-moz-range-thumb {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid white;
+    border-radius: 50%;
+    background: var(--ink);
+    box-shadow:
+        0 0 0 1px rgba(24, 23, 19, 0.22),
+        0 0.35rem 0.9rem rgba(24, 23, 19, 0.18);
+}
+
 .tool-view-active .orb-grid {
     opacity: 0;
     pointer-events: none;
@@ -996,6 +1050,11 @@ button {
 }
 
 .tool-view-active .color-wheel {
+    pointer-events: auto;
+}
+
+.tool-view-active .color-wheel-value {
+    opacity: 1;
     pointer-events: auto;
 }
 
