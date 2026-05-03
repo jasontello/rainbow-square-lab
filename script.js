@@ -7,8 +7,6 @@ const toolSelectors = Array.from(document.querySelectorAll(".tool-selector"));
 const colorToolSelector = document.querySelector(".tool-selector--color");
 const toolSelectorIcons = Array.from(document.querySelectorAll(".tool-selector img"));
 const toolConnectors = Array.from(document.querySelectorAll(".tool-connector"));
-const toolIntro = document.getElementById("tool-intro");
-const startExploringButton = document.getElementById("start-exploring-btn");
 const toolBackButton = document.getElementById("tool-back-btn");
 const selectedColorSphere = document.getElementById("selected-color-sphere");
 const selectedColorLabel = document.getElementById("selected-color-label");
@@ -70,7 +68,6 @@ let orbDevicePixelRatio = 1;
 let selectedColor = null;
 let isDraggingColorWheel = false;
 let markerHideTimeout = null;
-let hasSeenToolIntro = false;
 let lockAudioContext = null;
 let pickerHue = 210;
 let pickerSaturation = 35;
@@ -809,33 +806,14 @@ function enterColorTool(event) {
     playColorDropperSound();
     document.body.classList.add("tool-view-active");
 
-    if (toolIntro && !hasSeenToolIntro) {
-        toolIntro.setAttribute("aria-hidden", "false");
-    }
-
     window.requestAnimationFrame(() => {
         resizeColorWheelCanvas();
-
-        if (!hasSeenToolIntro) {
-            document.body.classList.add("tool-intro-visible");
-        }
-
         updateToolConnector();
     });
 }
 
-function dismissToolIntro() {
-    hasSeenToolIntro = true;
-    document.body.classList.remove("tool-intro-visible");
-
-    window.setTimeout(() => {
-        toolIntro?.setAttribute("aria-hidden", "true");
-    }, 380);
-}
-
 function exitColorTool() {
-    document.body.classList.remove("tool-view-active", "tool-intro-visible");
-    toolIntro?.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("tool-view-active");
     updateToolConnector();
 }
 
@@ -1032,7 +1010,6 @@ toolSelectors.forEach((selector) => {
         shakeLockedTool(selector);
     });
 });
-startExploringButton?.addEventListener("click", dismissToolIntro);
 toolBackButton?.addEventListener("click", exitColorTool);
 colorWheel?.addEventListener("pointerdown", startColorWheelDrag);
 colorWheel?.addEventListener("pointermove", dragColorWheel);
