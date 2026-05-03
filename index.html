@@ -29,9 +29,9 @@
 
       <section class="hero" aria-label="Interactive rainbow color field">
         <div class="visual-stage" id="motion" aria-label="Animated rainbow square orb">
-          <aside class="tool-panel tool-panel--left" id="color-tool" aria-label="Color Decision">
+          <aside class="tool-panel tool-panel--left" id="color-tool" aria-label="Color Finder">
             <p class="tool-eyebrow">Color system 01</p>
-            <h1>COLOR DECISION</h1>
+            <h1>Color Finder</h1>
             <div class="tool-copy">
               <p>Hover over the rainbow circle and select a color.</p>
               <p>The tool will output the color's HEX, RGBA, and CMYK values.</p>
@@ -73,6 +73,7 @@
             <span class="color-wheel-surface" aria-hidden="true"></span>
             <canvas class="color-wheel" id="color-wheel" aria-label="Color wheel picker" role="button" tabindex="0"></canvas>
             <span class="color-wheel-center" aria-hidden="true"></span>
+            <span class="color-wheel-radius-line" id="color-wheel-radius-line" aria-hidden="true"></span>
             <span class="color-wheel-marker" id="color-wheel-marker" aria-hidden="true"></span>
           </div>
           <div class="orb-caption">
@@ -152,7 +153,7 @@
 
       <div class="tool-intro" id="tool-intro" aria-hidden="true">
         <div class="tool-intro__content" role="dialog" aria-modal="true" aria-labelledby="tool-intro-title">
-          <p class="tool-eyebrow">COLOR DECISION</p>
+          <p class="tool-eyebrow">Color Finder</p>
           <h2 id="tool-intro-title">Color shapes perception</h2>
           <p>Choose a color to explore how it affects mood, contrast, and usability.</p>
           <button class="tool-intro__button" id="start-exploring-btn" type="button">Start Exploring</button>

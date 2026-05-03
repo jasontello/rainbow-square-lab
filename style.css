@@ -93,7 +93,7 @@ button {
 
 .brand-logo {
     position: relative;
-    width: 1.55rem;
+    width: 2rem;
     height: 1.35rem;
     display: inline-block;
     flex: 0 0 auto;
@@ -1009,9 +1009,9 @@ button {
     z-index: 5;
     width: 0.78rem;
     aspect-ratio: 1;
-    border: 2px solid rgba(255, 255, 255, 0.78);
+    border: 2px solid rgba(255, 255, 255, 0.82);
     border-radius: 50%;
-    background: rgba(24, 23, 19, 0.72);
+    background: white;
     box-shadow: 0 0.35rem 1rem rgba(24, 23, 19, 0.16);
     opacity: 0;
     pointer-events: none;
@@ -1021,6 +1021,23 @@ button {
         transform 0.5s ease;
 }
 
+.color-wheel-radius-line {
+    --wheel-line-length: 0px;
+    --wheel-line-angle: 0deg;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 6;
+    width: var(--wheel-line-length);
+    height: 1px;
+    background: rgba(255, 255, 255, 0.82);
+    opacity: 0;
+    pointer-events: none;
+    transform: rotate(var(--wheel-line-angle));
+    transform-origin: left center;
+    transition: opacity 0.22s ease;
+}
+
 .color-wheel-marker {
     --marker-x: 50%;
     --marker-y: 50%;
@@ -1028,12 +1045,14 @@ button {
     top: var(--marker-y);
     left: var(--marker-x);
     z-index: 6;
-    width: 1.35rem;
+    width: 2rem;
     aspect-ratio: 1;
-    border: 4px solid var(--ink);
+    border: 2px solid white;
     border-radius: 50%;
-    background: transparent;
-    box-shadow: 0 0.45rem 1.1rem rgba(24, 23, 19, 0.2);
+    background: rgba(255, 255, 255, 0.18);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.28),
+        0 0.45rem 1.1rem rgba(24, 23, 19, 0.18);
     opacity: 0;
     pointer-events: none;
     transform: translate(-50%, -50%) scale(0.72);
@@ -1062,6 +1081,10 @@ button {
 .tool-view-active .color-wheel-marker.is-visible {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+}
+
+.tool-view-active .color-wheel-radius-line.is-visible {
+    opacity: 1;
 }
 
 .orb-caption {

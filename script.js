@@ -21,6 +21,7 @@ const selectedMagenta = document.getElementById("selected-m");
 const selectedYellow = document.getElementById("selected-y");
 const selectedBlack = document.getElementById("selected-k");
 const colorWheelMarker = document.getElementById("color-wheel-marker");
+const colorWheelRadiusLine = document.getElementById("color-wheel-radius-line");
 const colorDropperAudio = new Audio("assets/icondropperclick.wav");
 const colorPickerPopover = document.getElementById("color-picker-popover");
 const colorPickerField = document.getElementById("color-picker-field");
@@ -693,6 +694,20 @@ function moveColorWheelMarker(x, y) {
     colorWheelMarker.style.setProperty("--marker-x", `${x}px`);
     colorWheelMarker.style.setProperty("--marker-y", `${y}px`);
     colorWheelMarker.classList.add("is-visible");
+
+    if (colorWheelRadiusLine && orbShell) {
+        const shellRect = orbShell.getBoundingClientRect();
+        const centerX = shellRect.width / 2;
+        const centerY = shellRect.height / 2;
+        const deltaX = x - centerX;
+        const deltaY = y - centerY;
+        const length = Math.hypot(deltaX, deltaY);
+        const angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+
+        colorWheelRadiusLine.style.setProperty("--wheel-line-length", `${length}px`);
+        colorWheelRadiusLine.style.setProperty("--wheel-line-angle", `${angle}deg`);
+        colorWheelRadiusLine.classList.add("is-visible");
+    }
 }
 
 function scheduleColorWheelMarkerHide() {
@@ -756,7 +771,6 @@ function endColorWheelDrag(event) {
 
     isDraggingColorWheel = false;
     colorWheel?.releasePointerCapture?.(event.pointerId);
-    scheduleColorWheelMarkerHide();
 }
 
 function startPickerFieldDrag(event) {
@@ -1036,7 +1050,6 @@ colorWheel?.addEventListener("keydown", (event) => {
         clientX: rect.left + rect.width / 2,
         clientY: rect.top + rect.height / 2
     });
-    scheduleColorWheelMarkerHide();
 });
 
 selectedColorSphere?.addEventListener("click", () => {
