@@ -38,6 +38,10 @@ const monochromePairings = document.getElementById("monochrome-pairings");
 const paletteDots = document.getElementById("palette-dots");
 const palettePrev = document.getElementById("palette-prev");
 const paletteNext = document.getElementById("palette-next");
+const paletteLibrary = document.getElementById("palette-library");
+const paletteLibraryGrid = document.getElementById("palette-library-grid");
+const paletteLibraryClose = document.getElementById("palette-library-close");
+const paletteLibraryBackdrop = document.getElementById("palette-library-backdrop");
 
 const ORB_SIZE = 31;
 const ORB_CENTER = (ORB_SIZE - 1) / 2;
@@ -100,6 +104,7 @@ let isDraggingPickerField = false;
 let monochromeHexColors = [];
 let activeRelationshipIndex = 0;
 let activePaletteRgb = [115, 144, 176];
+let lastFocusedElement = null;
 
 colorDropperAudio.preload = "auto";
 
@@ -560,16 +565,9 @@ function renderColorRelationshipPalettes(red, green, blue, options = {}) {
             stack.style.setProperty("--palette-color-count", palette.length);
 
             stack.replaceChildren(...palette.map((hexColor) => {
-                const swatch = document.createElement("button");
+                const swatch = createPaletteSwatch(hexColor, "", "--mono-swatch");
 
-                swatch.type = "button";
                 swatch.dataset.monoSwatch = "";
-                swatch.dataset.hexLabel = hexColor;
-                swatch.dataset.copyValue = hexColor;
-                swatch.title = hexColor;
-                swatch.setAttribute("aria-label", `Copy ${hexColor}`);
-                swatch.style.setProperty("--mono-swatch", hexColor);
-
                 return swatch;
             }));
             pairing.append(stack);
@@ -612,6 +610,94 @@ function renderColorRelationshipPalettes(red, green, blue, options = {}) {
             ease: "power3.out",
             stagger: 0.025
         });
+}
+
+function createPaletteSwatch(hexColor, className, cssProperty) {
+    const swatch = document.createElement("button");
+
+    swatch.type = "button";
+    swatch.className = className;
+    swatch.dataset.hexLabel = hexColor;
+    swatch.dataset.copyValue = hexColor;
+    swatch.title = hexColor;
+    swatch.setAttribute("aria-label", `Copy ${hexColor}`);
+    swatch.style.setProperty(cssProperty, hexColor);
+
+    return swatch;
+}
+
+function copyPaletteSwatch(swatch) {
+    return copyTextToClipboard(swatch.dataset.copyValue).then((copied) => {
+        if (!copied) {
+            return;
+        }
+
+        swatch.dataset.hexLabel = "Copied";
+        showCopiedState(swatch, "Copied");
+        window.setTimeout(() => {
+            swatch.dataset.hexLabel = swatch.dataset.copyValue;
+        }, 1100);
+    });
+}
+
+function getCappedRelationshipPalettes(relationship, rgbChannels) {
+    const baseHsv = rgbToHsv(...rgbChannels);
+
+    return relationship.buildPalettes(baseHsv).map((palette) => palette.slice(0, 3));
+}
+
+function renderPaletteLibrary() {
+    if (!paletteLibraryGrid) {
+        return;
+    }
+
+    paletteLibraryGrid.replaceChildren(...COLOR_RELATIONSHIPS.map((relationship) => {
+        const column = document.createElement("section");
+        const heading = document.createElement("h3");
+        const palettes = getCappedRelationshipPalettes(relationship, activePaletteRgb);
+
+        column.className = "palette-library-column";
+        heading.textContent = relationship.title;
+        column.append(heading);
+
+        palettes.forEach((palette) => {
+            const stack = document.createElement("div");
+
+            stack.className = "palette-library-stack";
+            stack.dataset.colorCount = String(palette.length);
+            stack.style.setProperty("--palette-color-count", palette.length);
+            stack.replaceChildren(...palette.map((hexColor) => {
+                return createPaletteSwatch(hexColor, "palette-library-swatch", "--library-swatch");
+            }));
+            column.append(stack);
+        });
+
+        return column;
+    }));
+}
+
+function setPaletteLibraryOpen(isOpen) {
+    if (!paletteLibrary) {
+        return;
+    }
+
+    if (isOpen) {
+        lastFocusedElement = document.activeElement;
+        renderPaletteLibrary();
+        paletteLibrary.classList.add("is-open");
+        paletteLibrary.setAttribute("aria-hidden", "false");
+        document.body.classList.add("palette-library-open");
+        paletteLibraryClose?.focus();
+        return;
+    }
+
+    paletteLibrary.classList.remove("is-open");
+    paletteLibrary.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("palette-library-open");
+
+    if (lastFocusedElement?.focus) {
+        lastFocusedElement.focus();
+    }
 }
 
 function showRelationshipAt(index) {
@@ -1474,18 +1560,22 @@ monochromePairings?.addEventListener("click", async (event) => {
         return;
     }
 
-    const copied = await copyTextToClipboard(swatch.dataset.copyValue);
-
-    if (copied) {
-        swatch.dataset.hexLabel = "Copied";
-        showCopiedState(swatch, "Copied");
-        window.setTimeout(() => {
-            swatch.dataset.hexLabel = swatch.dataset.copyValue;
-        }, 1100);
-    }
+    await copyPaletteSwatch(swatch);
 });
+paletteTitle?.addEventListener("click", () => setPaletteLibraryOpen(true));
 palettePrev?.addEventListener("click", () => showRelationshipAt(activeRelationshipIndex - 1));
 paletteNext?.addEventListener("click", () => showRelationshipAt(activeRelationshipIndex + 1));
+paletteLibraryClose?.addEventListener("click", () => setPaletteLibraryOpen(false));
+paletteLibraryBackdrop?.addEventListener("click", () => setPaletteLibraryOpen(false));
+paletteLibraryGrid?.addEventListener("click", async (event) => {
+    const swatch = event.target.closest(".palette-library-swatch");
+
+    if (!swatch) {
+        return;
+    }
+
+    await copyPaletteSwatch(swatch);
+});
 document.addEventListener("pointerdown", (event) => {
     if (
         !colorPickerPopover?.classList.contains("is-open")
@@ -1499,6 +1589,11 @@ document.addEventListener("pointerdown", (event) => {
 });
 document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+        if (paletteLibrary?.classList.contains("is-open")) {
+            setPaletteLibraryOpen(false);
+            return;
+        }
+
         setColorPickerOpen(false);
     }
 });

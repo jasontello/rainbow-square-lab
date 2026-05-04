@@ -71,7 +71,9 @@
             <span class="orbit-anchor orbit-anchor--bottom-left" data-tool-anchor="bottom-left" aria-hidden="true"></span>
             <div class="monochrome-panel" aria-label="Color relationship palettes">
               <div class="palette-dots" id="palette-dots" aria-label="Color relationship pages"></div>
-              <h2 id="palette-title">Monochromatic</h2>
+              <h2>
+                <button class="palette-title-button" id="palette-title" type="button" aria-haspopup="dialog" aria-controls="palette-library">Monochromatic</button>
+              </h2>
               <button class="palette-nav palette-nav--prev" id="palette-prev" type="button" aria-label="Previous color relationship"></button>
               <button class="palette-nav palette-nav--next" id="palette-next" type="button" aria-label="Next color relationship"></button>
               <div class="monochrome-pairings" id="monochrome-pairings"></div>
@@ -170,6 +172,17 @@
       </section>
 
     </main>
+
+    <div class="palette-library" id="palette-library" role="dialog" aria-modal="true" aria-labelledby="palette-library-title" aria-hidden="true">
+      <button class="palette-library__backdrop" id="palette-library-backdrop" type="button" aria-label="Close palette library"></button>
+      <section class="palette-library__panel" aria-label="All color relationship palettes">
+        <div class="palette-library__header">
+          <h2 id="palette-library-title">Color Relationships</h2>
+          <button class="palette-library__close" id="palette-library-close" type="button" aria-label="Close palette library"></button>
+        </div>
+        <div class="palette-library__grid" id="palette-library-grid"></div>
+      </section>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="script.js"></script>
