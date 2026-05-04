@@ -69,6 +69,13 @@
             <span class="orbit-anchor orbit-anchor--top-right" data-tool-anchor="top-right" aria-hidden="true"></span>
             <span class="orbit-anchor orbit-anchor--bottom-right" data-tool-anchor="bottom-right" aria-hidden="true"></span>
             <span class="orbit-anchor orbit-anchor--bottom-left" data-tool-anchor="bottom-left" aria-hidden="true"></span>
+            <div class="monochrome-panel" aria-label="Color relationship palettes">
+              <div class="palette-dots" id="palette-dots" aria-label="Color relationship pages"></div>
+              <h2 id="palette-title">Monochromatic</h2>
+              <button class="palette-nav palette-nav--prev" id="palette-prev" type="button" aria-label="Previous color relationship"></button>
+              <button class="palette-nav palette-nav--next" id="palette-next" type="button" aria-label="Next color relationship"></button>
+              <div class="monochrome-pairings" id="monochrome-pairings"></div>
+            </div>
             <canvas class="orb-grid" id="rainbow-orb" aria-hidden="true"></canvas>
             <span class="color-wheel-surface" aria-hidden="true"></span>
             <canvas class="color-wheel" id="color-wheel" aria-label="Color wheel picker" role="button" tabindex="0"></canvas>
@@ -101,7 +108,9 @@
                   <span class="color-picker-field__marker" id="color-picker-field-marker" aria-hidden="true"></span>
                 </div>
                 <div class="color-picker-controls">
-                  <span class="color-picker-eyedropper" aria-hidden="true"></span>
+                  <button class="color-picker-eyedropper" id="color-picker-eyedropper" type="button" aria-label="Pick a color from the screen">
+                    <img src="assets/icons8-color-dropper-96.png" alt="">
+                  </button>
                   <span class="color-picker-preview" id="color-picker-preview" aria-hidden="true"></span>
                   <label class="color-picker-hue">
                     <span class="sr-only">Hue</span>
