@@ -76,7 +76,9 @@
               </h2>
               <button class="palette-nav palette-nav--prev" id="palette-prev" type="button" aria-label="Previous color relationship"></button>
               <button class="palette-nav palette-nav--next" id="palette-next" type="button" aria-label="Next color relationship"></button>
-              <div class="monochrome-pairings" id="monochrome-pairings"></div>
+              <div class="palette-strip-viewport">
+                <div class="monochrome-pairings" id="monochrome-pairings"></div>
+              </div>
             </div>
             <canvas class="orb-grid" id="rainbow-orb" aria-hidden="true"></canvas>
             <span class="color-wheel-surface" aria-hidden="true"></span>
@@ -102,62 +104,66 @@
           <aside class="tool-panel tool-panel--right color-controls" aria-label="Selected color controls">
             <h2 class="color-controls__title">Color Readout</h2>
 
-            <div class="color-control">
-              <p class="color-control__label">Select Color</p>
-              <button class="color-swatch" id="selected-color-sphere" type="button" aria-expanded="false" aria-controls="color-picker-popover" aria-label="Open detailed color picker"></button>
-              <div class="color-picker-popover" id="color-picker-popover" aria-hidden="true">
-                <div class="color-picker-field" id="color-picker-field" aria-label="Choose saturation and brightness" role="button" tabindex="0">
-                  <span class="color-picker-field__marker" id="color-picker-field-marker" aria-hidden="true"></span>
-                </div>
-                <div class="color-picker-controls">
-                  <button class="color-picker-eyedropper" id="color-picker-eyedropper" type="button" aria-label="Pick a color from the screen">
-                    <img src="assets/icons8-color-dropper-96.png" alt="">
-                  </button>
-                  <span class="color-picker-preview" id="color-picker-preview" aria-hidden="true"></span>
-                  <label class="color-picker-hue">
-                    <span class="sr-only">Hue</span>
-                    <input id="color-picker-hue" type="range" min="0" max="360" value="210">
-                  </label>
-                </div>
-                <div class="color-picker-rgb" aria-label="RGB color channels">
-                  <label>
-                    <input id="color-picker-red" type="number" min="0" max="255" value="115">
-                    <span>R</span>
-                  </label>
-                  <label>
-                    <input id="color-picker-green" type="number" min="0" max="255" value="144">
-                    <span>G</span>
-                  </label>
-                  <label>
-                    <input id="color-picker-blue" type="number" min="0" max="255" value="176">
-                    <span>B</span>
-                  </label>
+            <div class="color-passport">
+              <div class="color-control color-control--swatch">
+                <p class="color-control__label">Selected Tone</p>
+                <button class="color-swatch" id="selected-color-sphere" type="button" aria-expanded="false" aria-controls="color-picker-popover" aria-label="Open detailed color picker"></button>
+                <div class="color-picker-popover" id="color-picker-popover" aria-hidden="true">
+                  <div class="color-picker-field" id="color-picker-field" aria-label="Choose saturation and brightness" role="button" tabindex="0">
+                    <span class="color-picker-field__marker" id="color-picker-field-marker" aria-hidden="true"></span>
+                  </div>
+                  <div class="color-picker-controls">
+                    <button class="color-picker-eyedropper" id="color-picker-eyedropper" type="button" aria-label="Pick a color from the screen">
+                      <img src="assets/icons8-color-dropper-96.png" alt="">
+                    </button>
+                    <span class="color-picker-preview" id="color-picker-preview" aria-hidden="true"></span>
+                    <label class="color-picker-hue">
+                      <span class="sr-only">Hue</span>
+                      <input id="color-picker-hue" type="range" min="0" max="360" value="210">
+                    </label>
+                  </div>
+                  <div class="color-picker-rgb" aria-label="RGB color channels">
+                    <label>
+                      <input id="color-picker-red" type="number" min="0" max="255" value="115">
+                      <span>R</span>
+                    </label>
+                    <label>
+                      <input id="color-picker-green" type="number" min="0" max="255" value="144">
+                      <span>G</span>
+                    </label>
+                    <label>
+                      <input id="color-picker-blue" type="number" min="0" max="255" value="176">
+                      <span>B</span>
+                    </label>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div class="color-control">
-              <p class="color-control__label">HEX</p>
-              <p class="color-value color-value--hex is-empty" id="selected-color-label">No color selected</p>
-            </div>
+              <div class="color-passport__body">
+                <div class="color-control color-control--hex">
+                  <p class="color-control__label">Color Code</p>
+                  <p class="color-value color-value--hex is-empty" id="selected-color-label">No color selected</p>
+                </div>
 
-            <div class="color-control">
-              <p class="color-control__label">RGBA</p>
-              <div class="color-channel-grid" aria-label="Selected color RGBA values">
-                <p class="color-channel"><span class="channel-red">R:</span> <span id="selected-r">--</span></p>
-                <p class="color-channel"><span class="channel-green">G:</span> <span id="selected-g">--</span></p>
-                <p class="color-channel"><span class="channel-blue">B:</span> <span id="selected-b">--</span></p>
-                <p class="color-channel"><span>A:</span> <span id="selected-a">1</span></p>
-              </div>
-            </div>
+                <div class="color-control color-control--channels">
+                  <p class="color-control__label">RGBA</p>
+                  <div class="color-channel-grid" aria-label="Selected color RGBA values">
+                    <p class="color-channel"><span class="channel-red">R</span> <span id="selected-r">--</span></p>
+                    <p class="color-channel"><span class="channel-green">G</span> <span id="selected-g">--</span></p>
+                    <p class="color-channel"><span class="channel-blue">B</span> <span id="selected-b">--</span></p>
+                    <p class="color-channel"><span>A</span> <span id="selected-a">1</span></p>
+                  </div>
+                </div>
 
-            <div class="color-control">
-              <p class="color-control__label">CMYK (%)</p>
-              <div class="color-channel-grid" aria-label="Selected color CMYK values">
-                <p class="color-channel"><span class="channel-cyan">C:</span> <span id="selected-c">--</span></p>
-                <p class="color-channel"><span class="channel-magenta">M:</span> <span id="selected-m">--</span></p>
-                <p class="color-channel"><span class="channel-yellow">Y:</span> <span id="selected-y">--</span></p>
-                <p class="color-channel"><span>K:</span> <span id="selected-k">--</span></p>
+                <div class="color-control color-control--channels">
+                  <p class="color-control__label">CMYK</p>
+                  <div class="color-channel-grid" aria-label="Selected color CMYK values">
+                    <p class="color-channel"><span class="channel-cyan">C</span> <span id="selected-c">--</span></p>
+                    <p class="color-channel"><span class="channel-magenta">M</span> <span id="selected-m">--</span></p>
+                    <p class="color-channel"><span class="channel-yellow">Y</span> <span id="selected-y">--</span></p>
+                    <p class="color-channel"><span>K</span> <span id="selected-k">--</span></p>
+                  </div>
+                </div>
               </div>
             </div>
 

@@ -308,6 +308,35 @@ button {
     gap: 0.34rem;
 }
 
+.color-passport {
+    overflow: visible;
+    border: 1px solid rgba(24, 23, 19, 0.14);
+    border-radius: 0.62rem;
+    background: rgba(255, 255, 255, 0.5);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        0 1rem 2.6rem rgba(24, 23, 19, 0.08);
+}
+
+.color-control--swatch {
+    gap: 0;
+}
+
+.color-control--swatch .color-control__label {
+    position: absolute;
+    left: 0.72rem;
+    bottom: 0.65rem;
+    z-index: 1;
+    color: rgba(255, 255, 255, 0.82);
+    mix-blend-mode: screen;
+}
+
+.color-passport__body {
+    display: grid;
+    gap: 0.74rem;
+    padding: 0.78rem;
+}
+
 .color-control__label {
     margin: 0;
     color: rgba(24, 23, 19, 0.66);
@@ -321,13 +350,13 @@ button {
 .color-swatch {
     display: block;
     width: 100%;
-    min-height: clamp(3.2rem, 5.8vw, 4.6rem);
-    border: 1px solid rgba(24, 23, 19, 0.16);
-    border-radius: 0.65rem;
+    min-height: clamp(4.5rem, 8vw, 6.25rem);
+    border: 0;
+    border-radius: 0.62rem 0.62rem 0 0;
     background: var(--selected-color);
     box-shadow:
-        inset 0 0 0 3px rgba(255, 255, 255, 0.68),
-        0 0.8rem 2rem rgba(24, 23, 19, 0.07);
+        inset 0 -3.2rem 4.5rem rgba(0, 0, 0, 0.12),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.42);
     appearance: none;
     cursor: pointer;
     padding: 0;
@@ -337,8 +366,8 @@ button {
 .color-swatch:hover,
 .color-swatch:focus-visible {
     box-shadow:
-        inset 0 0 0 3px rgba(255, 255, 255, 0.8),
-        0 1rem 2.3rem rgba(24, 23, 19, 0.1);
+        inset 0 -3.2rem 4.5rem rgba(0, 0, 0, 0.1),
+        inset 0 0 0 2px rgba(255, 255, 255, 0.7);
 }
 
 .color-picker-popover {
@@ -348,12 +377,12 @@ button {
     right: 0;
     top: calc(100% + 0.45rem);
     z-index: 12;
-    width: min(21rem, 78vw);
-    border: 1px solid rgba(24, 23, 19, 0.18);
-    border-radius: 0.72rem;
-    padding: 0.28rem;
-    background: rgba(255, 255, 255, 0.94);
-    box-shadow: 0 1.5rem 4rem rgba(24, 23, 19, 0.18);
+    width: min(17.5rem, 74vw);
+    border: 1px solid rgba(24, 23, 19, 0.14);
+    border-radius: 0.48rem;
+    padding: 0.22rem;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 1rem 2.4rem rgba(24, 23, 19, 0.14);
     opacity: 0;
     pointer-events: none;
     transform: translateY(-0.35rem) scale(0.98);
@@ -371,10 +400,10 @@ button {
 
 .color-picker-field {
     position: relative;
-    height: 9.8rem;
+    height: 6.4rem;
     overflow: hidden;
     border: 0;
-    border-radius: 0.48rem 0.48rem 0.2rem 0.2rem;
+    border-radius: 0.32rem;
     background:
         linear-gradient(to top, black, transparent),
         linear-gradient(to right, white, transparent),
@@ -387,9 +416,9 @@ button {
     position: absolute;
     left: calc(var(--picker-saturation, 45) * 1%);
     top: calc((100 - var(--picker-value, 69)) * 1%);
-    width: 1.2rem;
+    width: 0.9rem;
     aspect-ratio: 1;
-    border: 3px solid var(--ink);
+    border: 2px solid var(--ink);
     border-radius: 50%;
     background: white;
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.68);
@@ -399,16 +428,16 @@ button {
 
 .color-picker-controls {
     display: grid;
-    grid-template-columns: 1.7rem 2.4rem 1fr;
+    grid-template-columns: 1.25rem 1.75rem 1fr;
     align-items: center;
-    gap: 0.58rem;
-    padding: 0.72rem 0.55rem 0.48rem;
+    gap: 0.42rem;
+    padding: 0.48rem 0.36rem 0.34rem;
 }
 
 .color-picker-eyedropper {
     padding: 0;
-    width: 1.45rem;
-    height: 1.45rem;
+    width: 1.08rem;
+    height: 1.08rem;
     justify-self: center;
     border: 0;
     background: transparent;
@@ -434,7 +463,7 @@ button {
 }
 
 .color-picker-preview {
-    width: 2.15rem;
+    width: 1.48rem;
     aspect-ratio: 1;
     border: 1px solid rgba(24, 23, 19, 0.22);
     border-radius: 50%;
@@ -444,7 +473,7 @@ button {
 
 .color-picker-hue input {
     width: 100%;
-    height: 0.9rem;
+    height: 0.54rem;
     border-radius: 999px;
     appearance: none;
     background:
@@ -453,9 +482,9 @@ button {
 }
 
 .color-picker-hue input::-webkit-slider-thumb {
-    width: 1.45rem;
+    width: 1.08rem;
     aspect-ratio: 1;
-    border: 3px solid white;
+    border: 2px solid white;
     border-radius: 50%;
     appearance: none;
     background: var(--picker-color);
@@ -465,9 +494,9 @@ button {
 }
 
 .color-picker-hue input::-moz-range-thumb {
-    width: 1.45rem;
-    height: 1.45rem;
-    border: 3px solid white;
+    width: 1.08rem;
+    height: 1.08rem;
+    border: 2px solid white;
     border-radius: 50%;
     background: var(--picker-color);
     box-shadow:
@@ -478,13 +507,13 @@ button {
 .color-picker-rgb {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.45rem;
-    padding: 0 0.55rem 0.58rem;
+    gap: 0.32rem;
+    padding: 0 0.36rem 0.42rem;
 }
 
 .color-picker-rgb label {
     display: grid;
-    gap: 0.28rem;
+    gap: 0.2rem;
     text-align: center;
 }
 
@@ -492,10 +521,10 @@ button {
     width: 100%;
     display: grid;
     place-items: center;
-    border: 1px solid rgba(24, 23, 19, 0.18);
-    border-radius: 0.38rem;
-    padding: 0.42rem 0.25rem;
-    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(24, 23, 19, 0.14);
+    border-radius: 0.28rem;
+    padding: 0.28rem 0.18rem;
+    background: rgba(255, 255, 255, 0.68);
     color: var(--ink);
     font-family: var(--font-body);
     font-size: var(--type-control);
@@ -514,35 +543,32 @@ button {
     display: block;
     width: 100%;
     font-family: var(--font-mono);
-    font-size: var(--type-caption);
+    font-size: 0.72rem;
     font-weight: 500;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.1em;
 }
 
 .color-value,
 .color-channel {
     margin: 0;
-    border: 1px solid rgba(24, 23, 19, 0.15);
-    border-radius: 0.5rem;
-    background: rgba(255, 255, 255, 0.56);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62);
 }
 
 .color-value {
-    min-height: 2.35rem;
+    min-height: auto;
     display: flex;
     align-items: center;
-    padding: 0 0.68rem;
+    padding: 0;
     font-family: var(--font-mono);
-    font-size: var(--type-control);
+    font-size: clamp(1.3rem, 1.9vw, 1.82rem);
     font-weight: 500;
-    letter-spacing: 0.01em;
+    letter-spacing: 0;
+    line-height: 1;
 }
 
 .color-value--hex.is-empty {
     color: var(--muted);
-    font-size: var(--type-micro);
-    font-weight: 800;
+    font-size: var(--type-label);
+    font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
 }
@@ -550,23 +576,32 @@ button {
 .color-channel-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.28rem;
+    gap: 0;
+    border-top: 1px solid rgba(24, 23, 19, 0.12);
+    border-left: 1px solid rgba(24, 23, 19, 0.12);
 }
 
 .color-channel {
-    min-height: 2.15rem;
-    display: flex;
+    min-height: 2.28rem;
+    display: grid;
+    grid-template-rows: auto auto;
     align-items: center;
     justify-content: center;
-    gap: 0.14rem;
-    padding: 0 0.2rem;
+    gap: 0.12rem;
+    border-right: 1px solid rgba(24, 23, 19, 0.12);
+    border-bottom: 1px solid rgba(24, 23, 19, 0.12);
+    padding: 0.36rem 0.12rem;
+    background: rgba(255, 255, 255, 0.34);
     font-family: var(--font-mono);
-    font-size: var(--type-label);
+    font-size: var(--type-caption);
     font-weight: 500;
+    text-align: center;
 }
 
 .color-channel span:first-child {
+    font-size: var(--type-micro);
     font-weight: 800;
+    line-height: 1;
 }
 
 .channel-red {
@@ -945,12 +980,35 @@ button {
     opacity: 1;
 }
 
+.palette-strip-viewport {
+    overflow: hidden;
+    padding-top: 0.72rem;
+}
+
+.palette-strip-viewport.is-fading-left {
+    mask-image: linear-gradient(90deg, transparent, black 16%, black);
+}
+
+.palette-strip-viewport.is-fading-right {
+    mask-image: linear-gradient(90deg, black, black 84%, transparent);
+}
+
 .monochrome-pairings {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.62rem;
-    padding-top: 0.72rem;
+    cursor: grab;
+    touch-action: pan-y;
+    user-select: none;
     will-change: opacity, transform;
+}
+
+.monochrome-pairings.is-dragging {
+    cursor: grabbing;
+}
+
+.monochrome-pairings.is-dragging .monochrome-stack button {
+    cursor: grabbing;
 }
 
 .monochrome-pairing {

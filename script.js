@@ -35,6 +35,7 @@ const colorPickerBlue = document.getElementById("color-picker-blue");
 const colorPickerEyedropper = document.getElementById("color-picker-eyedropper");
 const paletteTitle = document.getElementById("palette-title");
 const monochromePairings = document.getElementById("monochrome-pairings");
+const paletteStripViewport = document.querySelector(".palette-strip-viewport");
 const paletteDots = document.getElementById("palette-dots");
 const palettePrev = document.getElementById("palette-prev");
 const paletteNext = document.getElementById("palette-next");
@@ -75,6 +76,7 @@ const COLOR_WHEEL_STOPS = [
     { angle: 360, color: "#ff2a16" }
 ];
 const WHEEL_TONE_SCROLL_STEP = 4;
+const PALETTE_EDGE_FADE_THRESHOLD = 36;
 const COLOR_RELATIONSHIPS = [
     { title: "Monochromatic", buildPalettes: buildMonochromaticPalettes },
     { title: "Complementary", buildPalettes: buildComplementaryPalettes },
@@ -105,6 +107,10 @@ let monochromeHexColors = [];
 let activeRelationshipIndex = 0;
 let activePaletteRgb = [115, 144, 176];
 let lastFocusedElement = null;
+let isDraggingPalette = false;
+let paletteDragStartX = 0;
+let paletteDragDeltaX = 0;
+let suppressPaletteClickUntil = 0;
 
 colorDropperAudio.preload = "auto";
 
@@ -698,6 +704,81 @@ function setPaletteLibraryOpen(isOpen) {
     if (lastFocusedElement?.focus) {
         lastFocusedElement.focus();
     }
+}
+
+function getPaletteAnimationTargets() {
+    return [paletteTitle, monochromePairings].filter(Boolean);
+}
+
+function resetPaletteDragPosition() {
+    const targets = getPaletteAnimationTargets();
+
+    if (!targets.length || !window.gsap) {
+        return;
+    }
+
+    window.gsap.to(targets, {
+        x: 0,
+        opacity: 1,
+        duration: 0.22,
+        ease: "power3.out"
+    });
+}
+
+function startPaletteDrag(event) {
+    if (!monochromePairings || event.button !== 0) {
+        return;
+    }
+
+    isDraggingPalette = true;
+    paletteDragStartX = event.clientX;
+    paletteDragDeltaX = 0;
+    monochromePairings.classList.add("is-dragging");
+    paletteStripViewport?.classList.add("is-dragging");
+    paletteStripViewport?.classList.remove("is-fading-left", "is-fading-right");
+    monochromePairings.setPointerCapture?.(event.pointerId);
+}
+
+function dragPalette(event) {
+    if (!isDraggingPalette) {
+        return;
+    }
+
+    paletteDragDeltaX = event.clientX - paletteDragStartX;
+    paletteStripViewport?.classList.toggle("is-fading-left", paletteDragDeltaX < -PALETTE_EDGE_FADE_THRESHOLD);
+    paletteStripViewport?.classList.toggle("is-fading-right", paletteDragDeltaX > PALETTE_EDGE_FADE_THRESHOLD);
+
+    if (window.gsap) {
+        window.gsap.set(getPaletteAnimationTargets(), {
+            x: paletteDragDeltaX * 0.32,
+            opacity: clamp(1 - Math.abs(paletteDragDeltaX) / 260, 0.58, 1)
+        });
+    }
+}
+
+function endPaletteDrag(event) {
+    if (!isDraggingPalette) {
+        return;
+    }
+
+    const dragDistance = paletteDragDeltaX;
+    const didDrag = Math.abs(dragDistance) > 8;
+
+    isDraggingPalette = false;
+    monochromePairings?.classList.remove("is-dragging");
+    paletteStripViewport?.classList.remove("is-dragging", "is-fading-left", "is-fading-right");
+    monochromePairings?.releasePointerCapture?.(event.pointerId);
+
+    if (didDrag) {
+        suppressPaletteClickUntil = Date.now() + 450;
+    }
+
+    if (Math.abs(dragDistance) < 46) {
+        resetPaletteDragPosition();
+        return;
+    }
+
+    showRelationshipAt(activeRelationshipIndex + (dragDistance < 0 ? 1 : -1));
 }
 
 function showRelationshipAt(index) {
@@ -1556,12 +1637,16 @@ colorPickerEyedropper?.addEventListener("click", pickColorFromScreen);
 monochromePairings?.addEventListener("click", async (event) => {
     const swatch = event.target.closest("[data-mono-swatch]");
 
-    if (!swatch) {
+    if (!swatch || Date.now() < suppressPaletteClickUntil) {
         return;
     }
 
     await copyPaletteSwatch(swatch);
 });
+monochromePairings?.addEventListener("pointerdown", startPaletteDrag);
+monochromePairings?.addEventListener("pointermove", dragPalette);
+monochromePairings?.addEventListener("pointerup", endPaletteDrag);
+monochromePairings?.addEventListener("pointercancel", endPaletteDrag);
 paletteTitle?.addEventListener("click", () => setPaletteLibraryOpen(true));
 palettePrev?.addEventListener("click", () => showRelationshipAt(activeRelationshipIndex - 1));
 paletteNext?.addEventListener("click", () => showRelationshipAt(activeRelationshipIndex + 1));
