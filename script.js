@@ -1,5 +1,6 @@
 const orbCanvas = document.getElementById("rainbow-orb");
 const orbContext = orbCanvas?.getContext("2d");
+const siteIntro = document.getElementById("site-intro");
 const colorWheel = document.getElementById("color-wheel");
 const colorWheelSurface = document.querySelector(".color-wheel-surface");
 const orbShell = document.getElementById("orb-shell");
@@ -116,6 +117,82 @@ colorDropperAudio.preload = "auto";
 
 function wrapIndex(index, length) {
     return ((index % length) + length) % length;
+}
+
+function playIntroAnimation() {
+    if (!siteIntro) {
+        return;
+    }
+
+    const shouldReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const introTiles = Array.from(siteIntro.querySelectorAll(".site-intro__tile"));
+    const introLetters = Array.from(siteIntro.querySelectorAll(".site-intro__word span:not(.site-intro__space)"));
+    const homeElements = [document.querySelector(".site-nav"), document.querySelector(".visual-stage")].filter(Boolean);
+
+    document.body.classList.add("intro-active");
+
+    if (!window.gsap || shouldReduceMotion) {
+        siteIntro.remove();
+        document.body.classList.remove("intro-active");
+        return;
+    }
+
+    window.gsap.set(homeElements, {
+        y: 12,
+        opacity: 0
+    });
+
+    window.gsap.timeline({
+        defaults: {
+            ease: "power3.out"
+        },
+        onComplete: () => {
+            siteIntro.remove();
+            document.body.classList.remove("intro-active");
+        }
+    })
+        .fromTo(introTiles, {
+            x: (index) => [-34, 4, -12][index] || 0,
+            y: (index) => [-18, -32, 28][index] || 0,
+            rotate: (index) => [-10, 8, 7][index] || 0,
+            scale: 0.68,
+            opacity: 0
+        }, {
+            x: 0,
+            y: 0,
+            rotate: 0,
+            scale: 1,
+            opacity: 1,
+            duration: 0.58,
+            stagger: 0.08
+        })
+        .fromTo(introLetters, {
+            y: 10,
+            opacity: 0
+        }, {
+            y: 0,
+            opacity: 1,
+            duration: 0.34,
+            stagger: 0.035
+        }, "-=0.18")
+        .to(".site-intro__brand", {
+            y: -8,
+            scale: 0.96,
+            opacity: 0,
+            duration: 0.32,
+            ease: "power2.in"
+        }, "+=0.42")
+        .to(siteIntro, {
+            yPercent: -100,
+            duration: 0.72,
+            ease: "power4.inOut"
+        }, "-=0.06")
+        .to(homeElements, {
+            y: 0,
+            opacity: 1,
+            duration: 0.62,
+            stagger: 0.08
+        }, "-=0.42");
 }
 
 function mixColor(colorA, colorB, amount) {
@@ -1694,3 +1771,4 @@ window.addEventListener("resize", () => {
 });
 
 renderColorRelationshipPalettes(...hexToRgb("#7390b0"));
+playIntroAnimation();
