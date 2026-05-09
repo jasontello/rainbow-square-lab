@@ -26,6 +26,18 @@
     --tracking-wide: 0.18em;
 }
 
+@property --connector-line-alpha {
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 1;
+}
+
+@property --connector-dot-alpha {
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 0;
+}
+
 * {
     box-sizing: border-box;
 }
@@ -892,20 +904,45 @@ button {
 }
 
 .tool-connector {
+    --connector-idle-opacity: 0.56;
+    --connector-line-alpha: 1;
+    --connector-dot-alpha: 0;
     position: absolute;
     left: var(--connector-left, 0px);
     top: var(--connector-top, 0px);
     z-index: 4;
     width: var(--connector-length, 0px);
-    height: 1px;
+    height: 3px;
     background:
-        linear-gradient(90deg, rgba(24, 23, 19, 0.46), rgba(24, 23, 19, 0.24), transparent);
-    background-size: 220% 100%;
-    opacity: 0.56;
+        radial-gradient(circle, rgb(24 23 19 / calc(0.42 * var(--connector-dot-alpha))) 0 1.35px, transparent 1.55px),
+        linear-gradient(90deg, rgb(24 23 19 / calc(0.46 * var(--connector-line-alpha))), rgb(24 23 19 / calc(0.24 * var(--connector-line-alpha))), transparent);
+    background-position:
+        0 50%,
+        0 50%;
+    background-repeat:
+        repeat-x,
+        no-repeat;
+    background-size:
+        0.82rem 3px,
+        220% 1px;
+    opacity: var(--connector-idle-opacity);
     pointer-events: none;
     transform: rotate(var(--connector-angle, 0deg));
     transform-origin: left center;
+    transition:
+        opacity 0.14s ease,
+        --connector-line-alpha 0.22s ease,
+        --connector-dot-alpha 0.22s ease,
+        filter 0.22s ease;
     will-change: width, transform, opacity, background-position;
+}
+
+.has-active-tool-line .tool-connector {
+    opacity: 0;
+}
+
+.has-active-tool-line .tool-connector.is-active {
+    opacity: var(--connector-idle-opacity);
 }
 
 .tool-connector::after {
@@ -960,7 +997,7 @@ button {
 
 .tool-selector:hover::before,
 .tool-selector:focus-visible::before {
-    --selector-glow-opacity: 0.85;
+    --selector-glow-opacity: 0;
     transform: scale(1);
     transition-duration: 1.15s;
     transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
@@ -971,6 +1008,10 @@ button {
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
+}
+
+.tool-view-active .tool-connector.is-active {
+    opacity: 0;
 }
 
 .tool-selector:focus-visible {
@@ -999,6 +1040,8 @@ button {
     will-change: transform;
 }
 
+.tool-selector--color:hover img,
+.tool-selector--color:focus-visible img,
 .tool-selector--locked:hover img,
 .tool-selector--locked:focus-visible img {
     opacity: 1;
@@ -1770,6 +1813,44 @@ button {
     transform: translate(var(--reset-x), calc(var(--reset-y) - 0.08rem));
 }
 
+.color-tool-preview:not(.tool-view-active) .orb-shell::before,
+.color-tool-preview:not(.tool-view-active) .orb-shell::after {
+    opacity: 0;
+    transform: rotate(0deg) scale(0.9);
+}
+
+.color-tool-preview:not(.tool-view-active) .orb-grid {
+    z-index: 4;
+    filter:
+        drop-shadow(0 2.2rem 4.5rem rgba(2, 11, 28, 0.18))
+        saturate(1.08);
+    opacity: 0.92;
+}
+
+.color-tool-preview:not(.tool-view-active) .color-wheel-surface {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.color-tool-preview:not(.tool-view-active) .tool-connector.is-active {
+    --connector-idle-opacity: 0.76;
+    --connector-line-alpha: 0;
+    --connector-dot-alpha: 1;
+    filter: drop-shadow(0 0.28rem 0.7rem rgba(24, 23, 19, 0.1));
+}
+
+.color-tool-preview:not(.tool-view-active) .tool-connector.is-active::after {
+    display: none;
+}
+
+.color-tool-preview-exiting:not(.tool-view-active) .color-wheel-surface {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+    transition:
+        opacity 0.08s ease,
+        transform 0.16s ease;
+}
+
 .tool-view-active .orb-grid {
     opacity: 0;
     pointer-events: none;
@@ -1799,6 +1880,30 @@ button {
 
 .tool-view-active .color-wheel-radius-line.is-visible {
     opacity: 1;
+}
+
+.tool-view-exiting:not(.tool-view-active) .orb-grid {
+    opacity: 1;
+    transform: rotate(var(--orb-rotate, 0deg)) scale(1);
+    transition:
+        opacity 0.16s ease,
+        transform 0.22s ease;
+}
+
+.tool-view-exiting:not(.tool-view-active) .color-wheel,
+.tool-view-exiting:not(.tool-view-active) .color-wheel-surface,
+.tool-view-exiting:not(.tool-view-active) .color-wheel-center,
+.tool-view-exiting:not(.tool-view-active) .color-wheel-marker,
+.tool-view-exiting:not(.tool-view-active) .color-wheel-radius-line {
+    opacity: 0;
+    transition:
+        opacity 0.08s ease,
+        transform 0.14s ease;
+}
+
+.tool-view-exiting:not(.tool-view-active) .color-wheel-value-control {
+    opacity: 0;
+    transition: opacity 0.08s ease;
 }
 
 .orb-caption {
@@ -1947,9 +2052,27 @@ button {
     }
 
     .tool-selector {
-        top: 16%;
-        left: 22%;
         width: 2.65rem;
+    }
+
+    .tool-selector--color {
+        top: 46%;
+        left: 18%;
+    }
+
+    .tool-selector--top-right {
+        top: 28%;
+        left: 72%;
+    }
+
+    .tool-selector--bottom-right {
+        top: 68%;
+        left: 74%;
+    }
+
+    .tool-selector--bottom-left {
+        top: 70%;
+        left: 24%;
     }
 
     .orb-shell {

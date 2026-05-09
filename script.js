@@ -96,9 +96,19 @@ let animationFrame = null;
 let cells = [];
 let orbCanvasSize = 0;
 let orbDevicePixelRatio = 1;
+let colorToolPreviewTarget = 0;
+let colorToolPreviewProgress = 0;
+let colorToolPreviewExitTimeout = null;
+let toolViewExitTimeout = null;
+let activeToolConnectorResetTimeout = null;
 let selectedColor = null;
 let isDraggingColorWheel = false;
 let lockAudioContext = null;
+let lightSliderAudioContext = null;
+let lightSliderOscillator = null;
+let lightSliderGain = null;
+let lightSliderReleaseTimeout = null;
+let isInteractingWithLightSlider = false;
 let wheelTone = 50;
 let lastWheelSelection = null;
 let selectedColorState = {
@@ -204,6 +214,17 @@ function playIntroAnimation() {
 function mixColor(colorA, colorB, amount) {
     const a = colorA.match(/\w\w/g).map((channel) => parseInt(channel, 16));
     const b = colorB.match(/\w\w/g).map((channel) => parseInt(channel, 16));
+    const mixed = a.map((channel, index) => {
+        return Math.round(channel + (b[index] - channel) * amount);
+    });
+
+    return `rgb(${mixed[0]}, ${mixed[1]}, ${mixed[2]})`;
+}
+
+function mixRgbColor(colorA, colorB, amount) {
+    const rgbPattern = /\d+(?:\.\d+)?/g;
+    const a = colorA.match(rgbPattern)?.slice(0, 3).map(Number) ?? [0, 0, 0];
+    const b = colorB.match(rgbPattern)?.slice(0, 3).map(Number) ?? [0, 0, 0];
     const mixed = a.map((channel, index) => {
         return Math.round(channel + (b[index] - channel) * amount);
     });
@@ -1088,6 +1109,43 @@ function getStaticRainbowColor(x, y) {
     return getRainbowColor(x, y, 0);
 }
 
+function getColorWheelPreviewColor(cell) {
+    const angle = (Math.atan2(cell.y - ORB_CENTER, cell.x - ORB_CENTER) * 180 / Math.PI + 360) % 360;
+    const radius = clamp(cell.distance / ORB_RADIUS, 0, 1);
+    const saturation = clamp(1 - radius * 0.08, 0.82, 1);
+    const lightness = clamp(0.55 + (1 - radius) * 0.18, 0.5, 0.76);
+    const [red, green, blue] = hslToRgb(angle, saturation, lightness);
+
+    return `rgb(${red}, ${green}, ${blue})`;
+}
+
+function setColorToolPreview(isPreviewing) {
+    const shouldReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    window.clearTimeout(colorToolPreviewExitTimeout);
+    colorToolPreviewTarget = isPreviewing ? 1 : 0;
+    colorToolPreviewProgress = shouldReduceMotion ? colorToolPreviewTarget : colorToolPreviewProgress;
+
+    if (isPreviewing) {
+        document.body.classList.remove("color-tool-preview-exiting");
+        document.body.classList.add("color-tool-preview");
+        return;
+    }
+
+    document.body.classList.remove("color-tool-preview");
+    document.body.classList.add("color-tool-preview-exiting");
+
+    colorToolPreviewExitTimeout = window.setTimeout(() => {
+        document.body.classList.remove("color-tool-preview-exiting");
+    }, shouldReduceMotion ? 0 : 260);
+}
+
+function smoothStep(edgeStart, edgeEnd, value) {
+    const progress = clamp((value - edgeStart) / (edgeEnd - edgeStart), 0, 1);
+
+    return progress * progress * (3 - 2 * progress);
+}
+
 function resizeOrbCanvas() {
     if (!orbCanvas || !orbContext) {
         return;
@@ -1142,11 +1200,16 @@ function buildOrb() {
                     latitude,
                     dotLeft: dotLeft / 100,
                     dotTop: dotTop / 100,
-                    color: getStaticRainbowColor(x, y)
+                    color: getStaticRainbowColor(x, y),
+                    previewColor: null
                 });
             }
         }
     }
+
+    cells.forEach((cell) => {
+        cell.previewColor = getColorWheelPreviewColor(cell);
+    });
 }
 
 function animateOrb(time = 0) {
@@ -1158,24 +1221,54 @@ function animateOrb(time = 0) {
     orbCanvas.style.setProperty("--orb-rotate", `${Math.sin(time * 0.00025) * 5}deg`);
     orbContext.clearRect(0, 0, orbCanvasSize, orbCanvasSize);
 
+    colorToolPreviewProgress += (colorToolPreviewTarget - colorToolPreviewProgress) * 0.075;
+
+    if (Math.abs(colorToolPreviewTarget - colorToolPreviewProgress) < 0.004) {
+        colorToolPreviewProgress = colorToolPreviewTarget;
+    }
+
+    const previewProgress = colorToolPreviewProgress;
+    const previewTileOpacity = colorToolPreviewTarget === 0
+        ? 1 - smoothStep(0.78, 0.98, previewProgress)
+        : 1 - smoothStep(0.42, 0.86, previewProgress);
+    const previewStrokeOpacity = (1 - previewProgress) ** 3;
+
     cells.forEach((cell) => {
         const longitudeWave = Math.sin(time * 0.0016 + cell.x * 0.6);
         const cloudBand = Math.sin(time * 0.001 + cell.x * 0.32 + cell.y * 0.52);
         const sparkle = Math.sin(time * 0.0022 + cell.distance * 0.9);
-        const opacity = Math.max(0.18, Math.min(1, cell.edgeFade * (0.56 + cloudBand * 0.26 + sparkle * 0.12)));
-        const scale = 0.72 + Math.max(0, longitudeWave) * 0.42 + Math.abs(cell.latitude) * 0.1;
+        const previewGather = Math.sin(previewProgress * Math.PI);
+        const previewOpacity = 0.86 + (1 - cell.distance / ORB_RADIUS) * 0.1;
+        const opacity = (Math.max(0.18, Math.min(1, cell.edgeFade * (0.56 + cloudBand * 0.26 + sparkle * 0.12)))
+            * (1 - previewProgress)
+            + previewOpacity * previewProgress) * previewTileOpacity;
+        const scale = (0.72 + Math.max(0, longitudeWave) * 0.42 + Math.abs(cell.latitude) * 0.1) * (1 - previewProgress)
+            + (1.42 + (1 - cell.distance / ORB_RADIUS) * 0.08) * previewProgress;
         const cellSize = orbCanvasSize * 0.0245 * scale;
-        const cellCenterX = orbCanvasSize * cell.dotLeft;
-        const cellCenterY = orbCanvasSize * cell.dotTop;
+        const originalCenterX = orbCanvasSize * cell.dotLeft;
+        const originalCenterY = orbCanvasSize * cell.dotTop;
+        const centerX = orbCanvasSize * 0.5;
+        const centerY = orbCanvasSize * 0.5;
+        const compactRadius = orbCanvasSize * 0.36;
+        const normalizedX = (cell.x - ORB_CENTER) / ORB_RADIUS;
+        const normalizedY = (cell.y - ORB_CENTER) / ORB_RADIUS;
+        const previewCenterX = centerX + normalizedX * compactRadius;
+        const previewCenterY = centerY + normalizedY * compactRadius;
+        const cellCenterX = originalCenterX * (1 - previewProgress) + previewCenterX * previewProgress;
+        const cellCenterY = originalCenterY * (1 - previewProgress) + previewCenterY * previewProgress - previewGather * orbCanvasSize * 0.012;
+        const cellColor = previewProgress > 0.02
+            ? mixRgbColor(cell.color, cell.previewColor, previewProgress)
+            : cell.color;
+        const cellRotation = Math.PI / 4 * (1 - previewProgress);
 
         orbContext.save();
         orbContext.translate(cellCenterX, cellCenterY);
-        orbContext.rotate(Math.PI / 4);
+        orbContext.rotate(cellRotation);
         orbContext.globalAlpha = opacity;
-        orbContext.fillStyle = cell.color;
+        orbContext.fillStyle = cellColor;
         orbContext.fillRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize);
         orbContext.globalAlpha = opacity * 0.32;
-        orbContext.strokeStyle = "rgba(24, 23, 19, 0.28)";
+        orbContext.strokeStyle = `rgba(24, 23, 19, ${0.28 * previewStrokeOpacity})`;
         orbContext.lineWidth = 1;
         orbContext.strokeRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize);
         orbContext.restore();
@@ -1246,10 +1339,27 @@ function updateToolConnectorFor(selector, connector) {
     const anchorCenterY = anchorRect.top + anchorRect.height / 2;
     const selectorCenterX = selectorRect.left + selectorRect.width / 2;
     const selectorCenterY = selectorRect.top + selectorRect.height / 2;
-    const startX = anchorCenterX - stageRect.left;
-    const startY = anchorCenterY - stageRect.top;
     const centerEndX = selectorCenterX - stageRect.left;
     const centerEndY = selectorCenterY - stageRect.top;
+    const isColorCirclePreview = document.body.classList.contains("color-tool-preview")
+        && !document.body.classList.contains("tool-view-active")
+        && colorWheelSurface;
+    let startX = anchorCenterX - stageRect.left;
+    let startY = anchorCenterY - stageRect.top;
+
+    if (isColorCirclePreview) {
+        const wheelRect = colorWheelSurface.getBoundingClientRect();
+        const wheelCenterX = wheelRect.left + wheelRect.width / 2 - stageRect.left;
+        const wheelCenterY = wheelRect.top + wheelRect.height / 2 - stageRect.top;
+        const wheelDeltaX = centerEndX - wheelCenterX;
+        const wheelDeltaY = centerEndY - wheelCenterY;
+        const wheelDistance = Math.hypot(wheelDeltaX, wheelDeltaY) || 1;
+        const wheelRadius = Math.min(wheelRect.width, wheelRect.height) / 2;
+
+        startX = wheelCenterX + (wheelDeltaX / wheelDistance) * wheelRadius;
+        startY = wheelCenterY + (wheelDeltaY / wheelDistance) * wheelRadius;
+    }
+
     const centerDeltaX = centerEndX - startX;
     const centerDeltaY = centerEndY - startY;
     const centerDistance = Math.hypot(centerDeltaX, centerDeltaY) || 1;
@@ -1275,6 +1385,38 @@ function updateToolConnector() {
 
         updateToolConnectorFor(selector, connector);
     });
+}
+
+function setActiveToolConnector(toolId) {
+    if (!toolId) {
+        return;
+    }
+
+    window.clearTimeout(activeToolConnectorResetTimeout);
+    document.body.classList.add("has-active-tool-line");
+    toolConnectors.forEach((connector) => {
+        connector.classList.toggle("is-active", connector.dataset.toolLine === toolId);
+    });
+}
+
+function clearActiveToolConnector() {
+    window.clearTimeout(activeToolConnectorResetTimeout);
+
+    activeToolConnectorResetTimeout = window.setTimeout(() => {
+        const activeSelector = toolSelectors.find((selector) => {
+            return selector.matches(":hover") || document.activeElement === selector;
+        });
+
+        if (activeSelector) {
+            setActiveToolConnector(activeSelector.dataset.toolId);
+            return;
+        }
+
+        document.body.classList.remove("has-active-tool-line");
+        toolConnectors.forEach((connector) => {
+            connector.classList.remove("is-active");
+        });
+    }, 55);
 }
 
 function updateSelectedColor(hexColor, rgbChannels = hexToRgb(hexColor)) {
@@ -1369,6 +1511,131 @@ function playLockSound() {
 function playColorDropperSound() {
     colorDropperAudio.currentTime = 0;
     colorDropperAudio.play().catch(() => {});
+}
+
+function playBackButtonSound() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContext) {
+        return;
+    }
+
+    lockAudioContext ??= new AudioContext();
+    lockAudioContext.resume?.();
+
+    const startTime = lockAudioContext.currentTime;
+    const gain = lockAudioContext.createGain();
+    const tone = lockAudioContext.createOscillator();
+    const lowTap = lockAudioContext.createOscillator();
+
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.11, startTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.16);
+    gain.connect(lockAudioContext.destination);
+
+    tone.type = "triangle";
+    tone.frequency.setValueAtTime(520, startTime);
+    tone.frequency.exponentialRampToValueAtTime(260, startTime + 0.12);
+    tone.connect(gain);
+    tone.start(startTime);
+    tone.stop(startTime + 0.14);
+
+    lowTap.type = "sine";
+    lowTap.frequency.setValueAtTime(165, startTime + 0.045);
+    lowTap.frequency.exponentialRampToValueAtTime(110, startTime + 0.16);
+    lowTap.connect(gain);
+    lowTap.start(startTime + 0.045);
+    lowTap.stop(startTime + 0.17);
+}
+
+function getLightSliderFrequency(value) {
+    const minFrequency = 130;
+    const maxFrequency = 1040;
+    const normalizedValue = clamp(Number(value) / 100, 0, 1);
+
+    return minFrequency * (maxFrequency / minFrequency) ** normalizedValue;
+}
+
+function ensureLightSliderTone() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContext) {
+        return false;
+    }
+
+    lightSliderAudioContext ??= new AudioContext();
+    lightSliderAudioContext.resume?.();
+
+    if (lightSliderOscillator && lightSliderGain) {
+        return true;
+    }
+
+    const startTime = lightSliderAudioContext.currentTime;
+
+    lightSliderOscillator = lightSliderAudioContext.createOscillator();
+    lightSliderGain = lightSliderAudioContext.createGain();
+
+    lightSliderOscillator.type = "sine";
+    lightSliderOscillator.frequency.setValueAtTime(getLightSliderFrequency(wheelTone), startTime);
+    lightSliderGain.gain.setValueAtTime(0.0001, startTime);
+
+    lightSliderOscillator.connect(lightSliderGain);
+    lightSliderGain.connect(lightSliderAudioContext.destination);
+    lightSliderOscillator.start(startTime);
+
+    return true;
+}
+
+function updateLightSliderTone(value) {
+    if (!ensureLightSliderTone() || !lightSliderAudioContext || !lightSliderOscillator || !lightSliderGain) {
+        return;
+    }
+
+    window.clearTimeout(lightSliderReleaseTimeout);
+
+    const now = lightSliderAudioContext.currentTime;
+    const frequency = getLightSliderFrequency(value);
+
+    lightSliderOscillator.frequency.cancelScheduledValues(now);
+    lightSliderOscillator.frequency.setTargetAtTime(frequency, now, 0.018);
+    lightSliderGain.gain.cancelScheduledValues(now);
+    lightSliderGain.gain.setTargetAtTime(0.042, now, 0.012);
+}
+
+function stopLightSliderTone(delay = 90) {
+    if (!lightSliderAudioContext || !lightSliderOscillator || !lightSliderGain) {
+        return;
+    }
+
+    window.clearTimeout(lightSliderReleaseTimeout);
+
+    const oscillator = lightSliderOscillator;
+    const gain = lightSliderGain;
+    const now = lightSliderAudioContext.currentTime;
+
+    gain.gain.cancelScheduledValues(now);
+    gain.gain.setTargetAtTime(0.0001, now, 0.03);
+
+    lightSliderReleaseTimeout = window.setTimeout(() => {
+        try {
+            oscillator.stop();
+        } catch (error) {
+            // The oscillator may already be stopped if the user moves the slider again quickly.
+        }
+
+        oscillator.disconnect();
+        gain.disconnect();
+
+        if (lightSliderOscillator === oscillator) {
+            lightSliderOscillator = null;
+            lightSliderGain = null;
+        }
+    }, delay);
+}
+
+function pulseLightSliderTone(value) {
+    updateLightSliderTone(value);
+    stopLightSliderTone(160);
 }
 
 function shakeLockedTool(selector) {
@@ -1559,6 +1826,9 @@ async function pickColorFromScreen(event) {
 
 function enterColorTool(event) {
     event?.preventDefault();
+    setColorToolPreview(false);
+    window.clearTimeout(toolViewExitTimeout);
+    document.body.classList.remove("tool-view-exiting");
     playColorDropperSound();
     document.body.classList.add("tool-view-active");
 
@@ -1569,8 +1839,16 @@ function enterColorTool(event) {
 }
 
 function exitColorTool() {
+    const shouldReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    window.clearTimeout(toolViewExitTimeout);
+    document.body.classList.add("tool-view-exiting");
     document.body.classList.remove("tool-view-active");
     updateToolConnector();
+
+    toolViewExitTimeout = window.setTimeout(() => {
+        document.body.classList.remove("tool-view-exiting");
+    }, shouldReduceMotion ? 0 : 260);
 }
 
 function startToolSelectorMotion() {
@@ -1669,10 +1947,10 @@ function startToolSelectorMotion() {
         });
     }
 
-    function setLockedIconScale(selector, scale) {
+    function setToolIconScale(selector, scale) {
         const icon = selector.querySelector("img");
 
-        if (!icon || !selector.classList.contains("tool-selector--locked")) {
+        if (!icon) {
             return;
         }
 
@@ -1704,7 +1982,7 @@ function startToolSelectorMotion() {
 
     toolConnectors.forEach((connector) => {
         toolTo(connector, {
-            opacity: 0.82,
+            "--connector-idle-opacity": 0.82,
             backgroundPosition: "100% 50%",
             duration: 3.4,
             repeat: -1,
@@ -1717,20 +1995,22 @@ function startToolSelectorMotion() {
         driftSelector(selector);
         pulseGlow(selector);
         selector.addEventListener("pointerenter", () => {
+            setActiveToolConnector(selector.dataset.toolId);
             setToolMotionScale(0.72);
-            setLockedIconScale(selector, 1.35);
+            setToolIconScale(selector, 1.35);
         });
         selector.addEventListener("pointerleave", () => {
             setToolMotionScale(1);
-            setLockedIconScale(selector, 1);
+            setToolIconScale(selector, 1);
         });
         selector.addEventListener("focus", () => {
+            setActiveToolConnector(selector.dataset.toolId);
             setToolMotionScale(0.72);
-            setLockedIconScale(selector, 1.35);
+            setToolIconScale(selector, 1.35);
         });
         selector.addEventListener("blur", () => {
             setToolMotionScale(1);
-            setLockedIconScale(selector, 1);
+            setToolIconScale(selector, 1);
         });
     });
 
@@ -1755,6 +2035,28 @@ if (orbShell) {
 }
 
 colorToolSelector?.addEventListener("click", enterColorTool);
+colorToolSelector?.addEventListener("pointerenter", () => {
+    setActiveToolConnector(colorToolSelector.dataset.toolId);
+    setColorToolPreview(true);
+});
+colorToolSelector?.addEventListener("pointerleave", () => {
+    setColorToolPreview(false);
+    clearActiveToolConnector();
+});
+colorToolSelector?.addEventListener("focus", () => {
+    setActiveToolConnector(colorToolSelector.dataset.toolId);
+    setColorToolPreview(true);
+});
+colorToolSelector?.addEventListener("blur", () => {
+    setColorToolPreview(false);
+    clearActiveToolConnector();
+});
+toolSelectors.forEach((selector) => {
+    selector.addEventListener("pointerenter", () => setActiveToolConnector(selector.dataset.toolId));
+    selector.addEventListener("pointerleave", clearActiveToolConnector);
+    selector.addEventListener("focus", () => setActiveToolConnector(selector.dataset.toolId));
+    selector.addEventListener("blur", clearActiveToolConnector);
+});
 toolSelectors.forEach((selector) => {
     if (selector === colorToolSelector) {
         return;
@@ -1766,7 +2068,10 @@ toolSelectors.forEach((selector) => {
         shakeLockedTool(selector);
     });
 });
-toolBackButton?.addEventListener("click", exitColorTool);
+toolBackButton?.addEventListener("click", () => {
+    playBackButtonSound();
+    exitColorTool();
+});
 colorWheel?.addEventListener("pointerdown", startColorWheelDrag);
 colorWheel?.addEventListener("pointermove", dragColorWheel);
 colorWheel?.addEventListener("pointerup", endColorWheelDrag);
@@ -1786,10 +2091,60 @@ colorWheel?.addEventListener("keydown", (event) => {
 });
 colorWheelValue?.addEventListener("input", () => {
     setWheelTone(Number(colorWheelValue.value));
+
+    if (isInteractingWithLightSlider) {
+        updateLightSliderTone(colorWheelValue.value);
+    } else {
+        pulseLightSliderTone(colorWheelValue.value);
+    }
+});
+
+colorWheelValue?.addEventListener("pointerdown", () => {
+    isInteractingWithLightSlider = true;
+    updateLightSliderTone(colorWheelValue.value);
+});
+
+colorWheelValue?.addEventListener("pointerup", () => {
+    isInteractingWithLightSlider = false;
+    stopLightSliderTone();
+});
+
+colorWheelValue?.addEventListener("pointercancel", () => {
+    isInteractingWithLightSlider = false;
+    stopLightSliderTone();
+});
+
+colorWheelValue?.addEventListener("keydown", (event) => {
+    if (!["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft", "Home", "End", "PageUp", "PageDown"].includes(event.key)) {
+        return;
+    }
+
+    isInteractingWithLightSlider = true;
+    updateLightSliderTone(colorWheelValue.value);
+});
+
+colorWheelValue?.addEventListener("keyup", () => {
+    isInteractingWithLightSlider = false;
+    stopLightSliderTone();
+});
+
+colorWheelValue?.addEventListener("blur", () => {
+    isInteractingWithLightSlider = false;
+    stopLightSliderTone();
+});
+
+window.addEventListener("pointerup", () => {
+    if (!isInteractingWithLightSlider) {
+        return;
+    }
+
+    isInteractingWithLightSlider = false;
+    stopLightSliderTone();
 });
 
 colorWheelReset?.addEventListener("click", () => {
     setWheelTone(50);
+    pulseLightSliderTone(50);
 });
 
 colorWheelValueControl?.addEventListener("wheel", (event) => {
@@ -1801,6 +2156,7 @@ colorWheelValueControl?.addEventListener("wheel", (event) => {
 
     const direction = event.deltaY < 0 ? 1 : -1;
     setWheelTone(wheelTone + direction * WHEEL_TONE_SCROLL_STEP);
+    pulseLightSliderTone(wheelTone);
 }, { passive: false });
 
 selectedColorSphere?.addEventListener("click", () => {
@@ -1844,7 +2200,10 @@ monochromePairings?.addEventListener("pointerdown", startPaletteDrag);
 monochromePairings?.addEventListener("pointermove", dragPalette);
 monochromePairings?.addEventListener("pointerup", endPaletteDrag);
 monochromePairings?.addEventListener("pointercancel", endPaletteDrag);
-paletteTitle?.addEventListener("click", () => setPaletteLibraryOpen(true));
+paletteTitle?.addEventListener("click", () => {
+    playColorDropperSound();
+    setPaletteLibraryOpen(true);
+});
 palettePrev?.addEventListener("click", () => showRelationshipAt(activeRelationshipIndex - 1));
 paletteNext?.addEventListener("click", () => showRelationshipAt(activeRelationshipIndex + 1));
 paletteLibraryClose?.addEventListener("click", () => setPaletteLibraryOpen(false));
