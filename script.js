@@ -29,6 +29,8 @@ const colorDropperAudio = new Audio("assets/icondropperclick.wav");
 const colorPickerPopover = document.getElementById("color-picker-popover");
 const colorPickerField = document.getElementById("color-picker-field");
 const colorPickerHue = document.getElementById("color-picker-hue");
+const colorPickerLight = document.getElementById("color-picker-light");
+const colorPickerLightValue = document.getElementById("color-picker-light-value");
 const colorPickerPreview = document.getElementById("color-picker-preview");
 const colorPickerRed = document.getElementById("color-picker-red");
 const colorPickerGreen = document.getElementById("color-picker-green");
@@ -96,13 +98,17 @@ let orbCanvasSize = 0;
 let orbDevicePixelRatio = 1;
 let selectedColor = null;
 let isDraggingColorWheel = false;
-let markerHideTimeout = null;
 let lockAudioContext = null;
 let wheelTone = 50;
 let lastWheelSelection = null;
+let selectedColorState = {
+    angle: 210,
+    saturation: 0.35,
+    tone: 50
+};
 let pickerHue = 210;
 let pickerSaturation = 35;
-let pickerValue = 69;
+let pickerValue = 50;
 let isDraggingPickerField = false;
 let monochromeHexColors = [];
 let activeRelationshipIndex = 0;
@@ -319,6 +325,122 @@ function applyWheelTone(rgbChannels, tone) {
     });
 }
 
+function getRgbDistance(firstRgb, secondRgb) {
+    return firstRgb.reduce((total, channel, index) => {
+        return total + ((channel - secondRgb[index]) ** 2);
+    }, 0);
+}
+
+function getBestToneForBaseRgb(baseRgb, targetRgb) {
+    const darkScale = clamp(
+        targetRgb.reduce((total, channel, index) => total + channel * baseRgb[index], 0)
+        / Math.max(baseRgb.reduce((total, channel) => total + channel ** 2, 0), 1),
+        0,
+        1
+    );
+    const darkTone = darkScale * 50;
+    const darkRgb = applyWheelTone(baseRgb, darkTone);
+    const lightVector = baseRgb.map((channel) => 255 - channel);
+    const lightScale = clamp(
+        targetRgb.reduce((total, channel, index) => total + (channel - baseRgb[index]) * lightVector[index], 0)
+        / Math.max(lightVector.reduce((total, channel) => total + channel ** 2, 0), 1),
+        0,
+        1
+    );
+    const lightTone = 50 + lightScale * 50;
+    const lightRgb = applyWheelTone(baseRgb, lightTone);
+
+    return getRgbDistance(darkRgb, targetRgb) <= getRgbDistance(lightRgb, targetRgb) ? darkTone : lightTone;
+}
+
+function getClosestWheelSelectionForRgb(targetRgb) {
+    const hsv = rgbToHsv(...targetRgb);
+    const baseAngle = normalizeHue(hsv.hue);
+    let bestSelection = {
+        angle: baseAngle,
+        saturation: clamp(hsv.saturation / 100, 0, 1),
+        tone: hsv.value,
+        error: Number.POSITIVE_INFINITY
+    };
+
+    for (let angleOffset = -10; angleOffset <= 10; angleOffset += 2) {
+        const angle = normalizeHue(baseAngle + angleOffset);
+
+        for (let saturationStep = 0; saturationStep <= 100; saturationStep += 1) {
+            const saturation = saturationStep / 100;
+            const baseRgb = getColorWheelRgb(angle, saturation);
+            const tone = getBestToneForBaseRgb(baseRgb, targetRgb);
+            const tonedRgb = applyWheelTone(baseRgb, tone);
+            const error = getRgbDistance(tonedRgb, targetRgb);
+
+            if (error < bestSelection.error) {
+                bestSelection = {
+                    angle,
+                    saturation,
+                    tone,
+                    error
+                };
+            }
+        }
+    }
+
+    return bestSelection;
+}
+
+function getColorStateRgb() {
+    return applyWheelTone(
+        getColorWheelRgb(selectedColorState.angle, selectedColorState.saturation),
+        selectedColorState.tone
+    );
+}
+
+function moveColorWheelMarkerFromState() {
+    if (!colorWheel || !orbShell) {
+        return;
+    }
+
+    const wheelRect = colorWheel.getBoundingClientRect();
+    const shellRect = orbShell.getBoundingClientRect();
+    const center = wheelRect.width / 2;
+    const markerAngle = (selectedColorState.angle - 90) * Math.PI / 180;
+    const markerDistance = center * selectedColorState.saturation;
+    const markerX = (wheelRect.left - shellRect.left) + center + Math.cos(markerAngle) * markerDistance;
+    const markerY = (wheelRect.top - shellRect.top) + center + Math.sin(markerAngle) * markerDistance;
+
+    moveColorWheelMarker(markerX, markerY);
+}
+
+function setSelectedColorState(nextState, options = {}) {
+    const { moveMarker = true, updateColor = true } = options;
+
+    selectedColorState = {
+        angle: normalizeHue(nextState.angle ?? selectedColorState.angle),
+        saturation: clamp(nextState.saturation ?? selectedColorState.saturation, 0, 1),
+        tone: clamp(nextState.tone ?? selectedColorState.tone, 0, 100)
+    };
+    wheelTone = Math.round(selectedColorState.tone);
+    lastWheelSelection = {
+        angle: selectedColorState.angle,
+        saturation: selectedColorState.saturation
+    };
+
+    if (colorWheelValue) {
+        colorWheelValue.value = String(wheelTone);
+    }
+
+    updateWheelToneOverlay();
+
+    if (moveMarker) {
+        moveColorWheelMarkerFromState();
+    }
+
+    if (updateColor) {
+        const rgbChannels = getColorStateRgb();
+
+        updateSelectedColor(rgbToHex(...rgbChannels), rgbChannels);
+    }
+}
+
 function updateWheelToneOverlay() {
     const darkness = wheelTone < 50 ? (50 - wheelTone) / 50 : 0;
     const lightness = wheelTone > 50 ? (wheelTone - 50) / 50 : 0;
@@ -327,15 +449,14 @@ function updateWheelToneOverlay() {
     colorWheelSurface?.style.setProperty("--wheel-lightness", lightness.toFixed(2));
 }
 
-function setWheelTone(value) {
-    wheelTone = Math.min(Math.max(Math.round(value), 0), 100);
+function setWheelTone(value, options = {}) {
+    const { updateColor = true } = options;
+    const hasWheelSelection = Boolean(selectedColor || lastWheelSelection);
 
-    if (colorWheelValue) {
-        colorWheelValue.value = String(wheelTone);
-    }
-
-    updateWheelToneOverlay();
-    updateSelectedColorFromWheelValue();
+    setSelectedColorState({ tone: value }, {
+        moveMarker: hasWheelSelection,
+        updateColor: updateColor && hasWheelSelection
+    });
 }
 
 function rgbToHex(red, green, blue) {
@@ -876,14 +997,9 @@ function syncPickerUiFromRgb(red, green, blue) {
         return;
     }
 
-    const hsv = rgbToHsv(red, green, blue);
-
-    if (hsv.saturation > 0) {
-        pickerHue = hsv.hue;
-    }
-
-    pickerSaturation = hsv.saturation;
-    pickerValue = hsv.value;
+    pickerHue = selectedColorState.angle;
+    pickerSaturation = selectedColorState.saturation * 100;
+    pickerValue = selectedColorState.tone;
     colorPickerPopover.style.setProperty("--picker-hue", pickerHue);
     colorPickerPopover.style.setProperty("--picker-saturation", pickerSaturation);
     colorPickerPopover.style.setProperty("--picker-value", pickerValue);
@@ -892,6 +1008,8 @@ function syncPickerUiFromRgb(red, green, blue) {
     if (colorPickerHue) {
         colorPickerHue.value = Math.round(pickerHue);
     }
+
+    updatePickerToneControl(wheelTone);
 
     if (colorPickerPreview) {
         colorPickerPreview.style.setProperty("--picker-color", rgbToHex(red, green, blue));
@@ -910,6 +1028,18 @@ function syncPickerUiFromRgb(red, green, blue) {
     }
 }
 
+function updatePickerToneControl(value) {
+    const nextValue = Math.round(value);
+
+    if (colorPickerLight) {
+        colorPickerLight.value = nextValue;
+    }
+
+    if (colorPickerLightValue) {
+        colorPickerLightValue.textContent = String(nextValue);
+    }
+}
+
 function setColorPickerOpen(isOpen) {
     colorPickerPopover?.classList.toggle("is-open", isOpen);
     colorPickerPopover?.setAttribute("aria-hidden", String(!isOpen));
@@ -917,8 +1047,11 @@ function setColorPickerOpen(isOpen) {
 }
 
 function applyPickerColor() {
-    const rgbChannels = hsvToRgb(pickerHue, pickerSaturation, pickerValue);
-    updateSelectedColor(rgbToHex(...rgbChannels), rgbChannels);
+    setSelectedColorState({
+        angle: pickerHue,
+        saturation: pickerSaturation / 100,
+        tone: pickerValue
+    });
 }
 
 function updatePickerFromFieldEvent(event) {
@@ -1271,7 +1404,6 @@ function moveColorWheelMarker(x, y) {
         return;
     }
 
-    window.clearTimeout(markerHideTimeout);
     colorWheelMarker.style.setProperty("--marker-x", `${x}px`);
     colorWheelMarker.style.setProperty("--marker-y", `${y}px`);
     colorWheelMarker.classList.add("is-visible");
@@ -1289,13 +1421,6 @@ function moveColorWheelMarker(x, y) {
         colorWheelRadiusLine.style.setProperty("--wheel-line-angle", `${angle}deg`);
         colorWheelRadiusLine.classList.add("is-visible");
     }
-}
-
-function scheduleColorWheelMarkerHide() {
-    window.clearTimeout(markerHideTimeout);
-    markerHideTimeout = window.setTimeout(() => {
-        colorWheelMarker?.classList.remove("is-visible");
-    }, 5000);
 }
 
 function selectColorFromWheel(event) {
@@ -1317,31 +1442,23 @@ function selectColorFromWheel(event) {
 
     const wheelAngle = (Math.atan2(deltaY, deltaX) * 180 / Math.PI + 450) % 360;
     const saturation = Math.min(distance / center, 1);
-    const baseRgb = getColorWheelRgb(wheelAngle, saturation);
-    const [red, green, blue] = applyWheelTone(baseRgb, wheelTone);
     const shellRect = orbShell?.getBoundingClientRect();
-
-    lastWheelSelection = {
-        angle: wheelAngle,
-        saturation
-    };
 
     if (shellRect) {
         moveColorWheelMarker(event.clientX - shellRect.left, event.clientY - shellRect.top);
     }
 
-    updateSelectedColor(rgbToHex(red, green, blue), [red, green, blue]);
+    setSelectedColorState({
+        angle: wheelAngle,
+        saturation,
+        tone: wheelTone
+    }, {
+        moveMarker: false
+    });
 }
 
 function updateSelectedColorFromWheelValue() {
-    if (!lastWheelSelection) {
-        return;
-    }
-
-    const baseRgb = getColorWheelRgb(lastWheelSelection.angle, lastWheelSelection.saturation);
-    const rgbChannels = applyWheelTone(baseRgb, wheelTone);
-
-    updateSelectedColor(rgbToHex(...rgbChannels), rgbChannels);
+    setSelectedColorState({ tone: wheelTone });
 }
 
 function startColorWheelDrag(event) {
@@ -1398,17 +1515,17 @@ function updatePickerFromRgbInputs() {
     const red = Math.min(Math.max(Number(colorPickerRed?.value) || 0, 0), 255);
     const green = Math.min(Math.max(Number(colorPickerGreen?.value) || 0, 0), 255);
     const blue = Math.min(Math.max(Number(colorPickerBlue?.value) || 0, 0), 255);
+    const wheelSelection = getClosestWheelSelectionForRgb([red, green, blue]);
 
-    syncPickerUiFromRgb(red, green, blue);
-    updateSelectedColor(rgbToHex(red, green, blue), [red, green, blue]);
+    setSelectedColorState(wheelSelection);
 }
 
 function applyPickedColor(hexColor) {
     const normalizedHex = hexColor.toUpperCase();
     const rgbChannels = hexToRgb(normalizedHex);
+    const wheelSelection = getClosestWheelSelectionForRgb(rgbChannels);
 
-    syncPickerUiFromRgb(...rgbChannels);
-    updateSelectedColor(normalizedHex, rgbChannels);
+    setSelectedColorState(wheelSelection);
 }
 
 async function pickColorFromScreen(event) {
@@ -1706,6 +1823,9 @@ colorPickerField?.addEventListener("keydown", (event) => {
 colorPickerHue?.addEventListener("input", () => {
     pickerHue = Number(colorPickerHue.value);
     applyPickerColor();
+});
+colorPickerLight?.addEventListener("input", () => {
+    setWheelTone(Number(colorPickerLight.value));
 });
 [colorPickerRed, colorPickerGreen, colorPickerBlue].forEach((input) => {
     input?.addEventListener("input", updatePickerFromRgbInputs);

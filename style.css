@@ -605,6 +605,92 @@ button {
         0 0.35rem 0.9rem rgba(24, 23, 19, 0.18);
 }
 
+.color-picker-light {
+    display: grid;
+    grid-template-columns: 1.08rem 1fr 2rem;
+    align-items: center;
+    gap: 0.42rem;
+    padding: 0 0.36rem 0.42rem;
+}
+
+.color-picker-light span {
+    position: relative;
+    width: 1.08rem;
+    aspect-ratio: 1;
+}
+
+.color-picker-light span::before,
+.color-picker-light span::after {
+    position: absolute;
+    content: "";
+    border-radius: 999px;
+    background: rgba(24, 23, 19, 0.54);
+}
+
+.color-picker-light span::before {
+    inset: 0.22rem;
+    background: transparent;
+    border: 1.5px solid rgba(24, 23, 19, 0.54);
+}
+
+.color-picker-light span::after {
+    left: 50%;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    transform: translateX(-50%);
+    box-shadow:
+        -0.38rem 0 0 rgba(24, 23, 19, 0.54),
+        0.38rem 0 0 rgba(24, 23, 19, 0.54);
+}
+
+.color-picker-light input {
+    width: 100%;
+    height: 0.72rem;
+    border-radius: 999px;
+    appearance: none;
+    background:
+        linear-gradient(90deg, #050505, var(--picker-color), #f7f5df);
+    cursor: pointer;
+}
+
+.color-picker-light input::-webkit-slider-thumb {
+    width: 1.08rem;
+    aspect-ratio: 1;
+    border: 2px solid white;
+    border-radius: 50%;
+    appearance: none;
+    background: var(--picker-color);
+    box-shadow:
+        0 0 0 2px rgba(24, 23, 19, 0.18),
+        0 0.35rem 0.9rem rgba(24, 23, 19, 0.18);
+}
+
+.color-picker-light input::-moz-range-thumb {
+    width: 1.08rem;
+    height: 1.08rem;
+    border: 2px solid white;
+    border-radius: 50%;
+    background: var(--picker-color);
+    box-shadow:
+        0 0 0 2px rgba(24, 23, 19, 0.18),
+        0 0.35rem 0.9rem rgba(24, 23, 19, 0.18);
+}
+
+.color-picker-light output {
+    min-width: 1.72rem;
+    border: 1px solid rgba(24, 23, 19, 0.12);
+    border-radius: 0.28rem;
+    padding: 0.18rem 0.24rem;
+    background: rgba(255, 255, 255, 0.58);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: var(--type-micro);
+    font-weight: 500;
+    line-height: 1;
+    text-align: center;
+}
+
 .color-picker-rgb {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

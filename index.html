@@ -123,7 +123,7 @@
                 <p class="color-control__label">Selected Tone</p>
                 <button class="color-swatch" id="selected-color-sphere" type="button" aria-expanded="false" aria-controls="color-picker-popover" aria-label="Open detailed color picker"></button>
                 <div class="color-picker-popover" id="color-picker-popover" aria-hidden="true">
-                  <div class="color-picker-field" id="color-picker-field" aria-label="Choose saturation and brightness" role="button" tabindex="0">
+                  <div class="color-picker-field" id="color-picker-field" aria-label="Choose saturation and tone" role="button" tabindex="0">
                     <span class="color-picker-field__marker" id="color-picker-field-marker" aria-hidden="true"></span>
                   </div>
                   <div class="color-picker-controls">
@@ -136,6 +136,11 @@
                       <input id="color-picker-hue" type="range" min="0" max="360" value="210">
                     </label>
                   </div>
+                  <label class="color-picker-light" aria-label="Adjust selected color light">
+                    <span aria-hidden="true"></span>
+                    <input id="color-picker-light" type="range" min="0" max="100" value="69">
+                    <output id="color-picker-light-value">69</output>
+                  </label>
                   <div class="color-picker-rgb" aria-label="RGB color channels">
                     <label>
                       <input id="color-picker-red" type="number" min="0" max="255" value="115">
