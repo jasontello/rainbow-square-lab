@@ -80,6 +80,7 @@ const COLOR_WHEEL_STOPS = [
 ];
 const WHEEL_TONE_SCROLL_STEP = 4;
 const PALETTE_EDGE_FADE_THRESHOLD = 36;
+const COMPACT_TOOL_ORBIT_QUERY = "(max-width: 680px)";
 const COLOR_RELATIONSHIPS = [
     { title: "Monochromatic", buildPalettes: buildMonochromaticPalettes },
     { title: "Complementary", buildPalettes: buildComplementaryPalettes },
@@ -1394,6 +1395,9 @@ function setActiveToolConnector(toolId) {
 
     window.clearTimeout(activeToolConnectorResetTimeout);
     document.body.classList.add("has-active-tool-line");
+    toolSelectors.forEach((selector) => {
+        selector.classList.toggle("is-active", selector.dataset.toolId === toolId);
+    });
     toolConnectors.forEach((connector) => {
         connector.classList.toggle("is-active", connector.dataset.toolLine === toolId);
     });
@@ -1413,6 +1417,9 @@ function clearActiveToolConnector() {
         }
 
         document.body.classList.remove("has-active-tool-line");
+        toolSelectors.forEach((selector) => {
+            selector.classList.remove("is-active");
+        });
         toolConnectors.forEach((connector) => {
             connector.classList.remove("is-active");
         });
@@ -1900,11 +1907,58 @@ function startToolSelectorMotion() {
         return delayedCall;
     }
 
+    function getCompactToolOrbitOffset(selector, options = {}) {
+        const { advance = true } = options;
+        const orbitAngles = {
+            color: 205,
+            "top-right": 328,
+            "bottom-right": 38,
+            "bottom-left": 152
+        };
+        const toolId = selector.dataset.toolId;
+        const baseAngle = orbitAngles[toolId] ?? 0;
+        const currentAngle = Number(selector.dataset.orbitAngle ?? baseAngle);
+        const nextAngle = advance ? currentAngle + random(7, 13) : currentAngle;
+        const radians = nextAngle * Math.PI / 180;
+        const orbRect = orbShell?.getBoundingClientRect();
+        const radiusSource = Math.min(orbRect?.width ?? 320, orbRect?.height ?? 320);
+        const radiusX = radiusSource * 0.48;
+        const radiusY = radiusSource * 0.39;
+
+        selector.dataset.orbitAngle = String(nextAngle);
+
+        return {
+            x: Math.cos(radians) * radiusX,
+            y: Math.sin(radians) * radiusY
+        };
+    }
+
     function driftSelector(selector) {
+        const compactOrbit = window.matchMedia(COMPACT_TOOL_ORBIT_QUERY).matches;
+
+        if (compactOrbit && selector.dataset.compactOrbitReady !== "true") {
+            const initialOffset = getCompactToolOrbitOffset(selector, { advance: false });
+
+            window.gsap.set(selector, {
+                x: initialOffset.x,
+                y: initialOffset.y
+            });
+            selector.dataset.compactOrbitReady = "true";
+        } else if (!compactOrbit) {
+            selector.dataset.compactOrbitReady = "false";
+        }
+
+        const nextOffset = compactOrbit
+            ? getCompactToolOrbitOffset(selector)
+            : {
+                x: random(-52, 34),
+                y: random(-42, 28)
+            };
+
         toolTo(selector, {
-            x: random(-52, 34),
-            y: random(-42, 28),
-            duration: random(3.2, 6.2),
+            x: nextOffset.x,
+            y: nextOffset.y,
+            duration: compactOrbit ? random(3.8, 6.4) : random(3.2, 6.2),
             ease: "sine.inOut",
             onUpdate: updateToolConnector,
             onComplete: () => driftSelector(selector)

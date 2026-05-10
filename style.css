@@ -945,6 +945,14 @@ button {
     opacity: var(--connector-idle-opacity);
 }
 
+.has-active-tool-line .tool-selector {
+    opacity: 0;
+}
+
+.has-active-tool-line .tool-selector.is-active {
+    opacity: 1;
+}
+
 .tool-connector::after {
     position: absolute;
     left: 0;
@@ -1953,6 +1961,32 @@ button {
     }
 }
 
+@media (max-width: 1200px) {
+    .tool-selector {
+        width: 2.9rem;
+    }
+
+    .tool-selector--color {
+        top: 25%;
+        left: 29%;
+    }
+
+    .tool-selector--top-right {
+        top: 25%;
+        left: 67%;
+    }
+
+    .tool-selector--bottom-right {
+        top: 67%;
+        left: 67%;
+    }
+
+    .tool-selector--bottom-left {
+        top: 67%;
+        left: 29%;
+    }
+}
+
 @media (max-width: 900px) {
     .landing-page {
         min-height: auto;
@@ -1970,10 +2004,10 @@ button {
     }
 
     .visual-stage {
-        min-height: 24rem;
+        min-height: clamp(23rem, 82vw, 30rem);
     }
 
-    .tool-panel {
+    .tool-view-active .tool-panel {
         position: static;
         width: min(100%, 34rem);
         justify-self: stretch;
@@ -1981,11 +2015,11 @@ button {
         transform: translateY(12px);
     }
 
-    .tool-panel--left {
+    .tool-view-active .tool-panel--left {
         margin-top: 1.5rem;
     }
 
-    .tool-panel--right {
+    .tool-view-active .tool-panel--right {
         margin-top: 1rem;
         justify-self: center;
         width: min(100%, 16rem);
@@ -2056,23 +2090,23 @@ button {
     }
 
     .tool-selector--color {
-        top: 46%;
-        left: 18%;
+        top: 33%;
+        left: 24%;
     }
 
     .tool-selector--top-right {
-        top: 28%;
-        left: 72%;
+        top: 30%;
+        left: 73%;
     }
 
     .tool-selector--bottom-right {
-        top: 68%;
+        top: 70%;
         left: 74%;
     }
 
     .tool-selector--bottom-left {
-        top: 70%;
-        left: 24%;
+        top: 72%;
+        left: 25%;
     }
 
     .orb-shell {
@@ -2082,6 +2116,38 @@ button {
     .orb-caption {
         right: 0;
         bottom: 0;
+    }
+}
+
+@media (max-width: 680px) {
+    .visual-stage {
+        min-height: clamp(20rem, 96vw, 25rem);
+    }
+
+    .tool-selector {
+        --compact-tool-size: clamp(2rem, 9vw, 2.35rem);
+        width: var(--compact-tool-size);
+        margin-top: calc(var(--compact-tool-size) / -2);
+        margin-left: calc(var(--compact-tool-size) / -2);
+    }
+
+    .tool-selector--color,
+    .tool-selector--top-right,
+    .tool-selector--bottom-right,
+    .tool-selector--bottom-left {
+        top: 50%;
+        left: 50%;
+    }
+
+    .tool-connector,
+    .has-active-tool-line .tool-connector,
+    .has-active-tool-line .tool-connector.is-active {
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    .orb-shell {
+        width: min(82vw, 23rem);
     }
 }
 
