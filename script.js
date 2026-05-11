@@ -1408,7 +1408,7 @@ function clearActiveToolConnector() {
 
     activeToolConnectorResetTimeout = window.setTimeout(() => {
         const activeSelector = toolSelectors.find((selector) => {
-            return selector.matches(":hover") || document.activeElement === selector;
+            return selector.matches(":hover") || selector.matches(":focus-visible");
         });
 
         if (activeSelector) {
